@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TTAD GROUP 天子創意來客週報表</title>
+
+<!-- 外部核心 SDK -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+
+<style>
+:root {
+  --apple-bg: #F5F5F7;
+  --apple-surface: #FFFFFF;
+  --apple-border: rgba(0, 0, 0, 0.08);
+  --text-main: #1D1D1F;
+  --text-muted: #86868B;
+  --apple-blue: #0066CC;
+  --apple-blue-hover: #004499;
+  --green: #248A3D;
+  --red: #FF3B30;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", "Noto Sans TC", sans-serif;
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.02);
+  --shadow-md: 0 10px 40px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--apple-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.5; }
+
+/* ── 登入介面 ── */
+#login-screen { position: fixed; inset: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.apple-login-container { width: 100%; max-width: 360px; text-align: center; padding: 32px 24px; }
+.brand-headline { font-size: 28px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-main); margin-bottom: 8px; }
+.brand-subline { font-size: 13px; font-weight: 400; color: var(--text-muted); margin-bottom: 40px; }
+.section-micro-label { font-size: 9px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.12em; display: block; margin-bottom: 12px; text-align: left; }
+
+.ios-segmented-control { position: relative; display: flex; background: rgba(118, 118, 128, 0.12); padding: 2px; border-radius: 9px; margin-bottom: 24px; }
+.ios-segmented-control input { display: none; }
+.ios-segmented-control label { flex: 1; padding: 8px 0; font-size: 13px; font-weight: 500; cursor: pointer; z-index: 2; }
+.ios-segmented-control input:checked + label { font-weight: 600; }
+.ios-segmented-slider { position: absolute; top: 2px; left: 2px; width: calc(33.333% - 2px); height: calc(100% - 4px); background: #FFFFFF; border-radius: 7px; box-shadow: 0px 3px 8px rgba(0,0,0,0.12); transition: transform 0.25s; z-index: 1; }
+#dept-design:checked ~ .ios-segmented-slider { transform: translateX(0); }
+#dept-plan:checked ~ .ios-segmented-slider { transform: translateX(100%); }
+#dept-admin:checked ~ .ios-segmented-slider { transform: translateX(200%); }
+
+.apple-input-box { background: #F5F5F7; border: 1px solid var(--apple-border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; text-align: left; transition: border-color 0.2s; }
+.apple-input-box input, .apple-input-box select { width: 100%; border: none; background: transparent; padding: 12px 16px; font-size: 13px; outline: none; font-family: var(--font); color: var(--text-main); }
+.apple-input-box select { -webkit-appearance: none; cursor: pointer; }
+
+/* ── 主系統狀態列 ── */
+.topbar { background: rgba(255, 255, 255, 0.85); backdrop-filter: saturate(180%) blur(20px); height: 64px; border-bottom: 1px solid var(--apple-border); position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+.brand-title { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
+
+.user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
+.badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+
+/* ── 內容區 ── */
+.app-container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+.card { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 32px; overflow: hidden; }
+.card-header { padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); }
+.card-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* 週次導覽列 */
+.week-navigator { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.05); padding: 4px; border-radius: 10px; }
+.week-btn { border: none; background: transparent; padding: 6px 14px; font-size: 12px; font-family: var(--font); cursor: pointer; border-radius: 8px; transition: all 0.2s; color: var(--text-main); font-weight: 500; }
+.week-btn.active { background: var(--apple-surface); box-shadow: var(--shadow-sm); font-weight: 600; }
+
+/* 人員膠囊篩選器 */
+.pill-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.pill-btn { border: 1px solid var(--apple-border); background: #F5F5F7; color: var(--text-main); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.pill-btn:hover { background: #E8E8ED; }
+.pill-btn.active { background: var(--text-main); color: #FFFFFF; border-color: var(--text-main); }
+
+/* 個案卡片 */
+.project-card { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; display: grid; grid-template-columns: 320px 1.1fr 1.2fr; gap: 36px; box-shadow: var(--shadow-sm); transition: transform 0.2s; }
+.pj-company { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+.pj-name { font-size: 20px; font-weight: 700; margin: 3px 0 8px; color: var(--text-main); }
+.pj-data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background: #F5F5F7; padding: 20px; border-radius: var(--radius-lg); align-items: center; }
+.data-label { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+.data-value { font-size: 22px; font-weight: 300; }
+.badge-tag { background: #E8E8ED; color: var(--text-main); font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; margin-right: 6px; }
+
+/* 四格填報資訊展示塊 */
+.reports-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; grid-column: span 3; border-top: 1px solid var(--apple-border); padding-top: 20px; }
+.report-box { background: #FAF9F6; border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--radius-md); }
+.report-box-title { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+.report-box-content { font-size: 12px; color: var(--text-main); word-break: break-all; min-height: 36px; line-height: 1.6; }
+
+/* ── 彈窗 ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(16px); display: none; align-items: center; justify-content: center; z-index: 99999; }
+.modal-container { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); width: 100%; max-width: 580px; box-shadow: var(--shadow-md); overflow: hidden; animation: popUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes popUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--apple-border); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-body { padding: 24px; max-height: 520px; overflow-y: auto; }
+.staff-form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+.staff-list-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--apple-border); border-radius: var(--radius-md); margin-bottom: 8px; background: #FAF9F6; }
+.staff-list-name { font-weight: 600; }
+.staff-list-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-primary { background: var(--apple-blue); color: white; }
+.btn-primary:hover { background: var(--apple-blue-hover); }
+.btn-secondary { background: #E8E8ED; color: var(--text-main); }
+.btn-ghost { background: transparent; color: var(--text-muted); }
+.btn-ghost:hover { background: rgba(0,0,0,0.04); color: var(--text-main); }
+.btn-capsule { border-radius: 99px; background: #E8E8ED; color: var(--text-main); }
+.toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 20px; font-size: 12px; z-index: 99999; display: none; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ 1. 登入頁面 ══════════════ -->
+<div id="login-screen">
+  <div class="apple-login-container">
+    <h1 class="brand-headline">TTAD GROUP</h1>
+    <p class="brand-subline">天子創意來客週報管理系統</p>
+    
+    <div class="ios-segmented-control">
+      <input type="radio" id="dept-design" name="dept-select" value="設計部" checked><label for="dept-design">設計部</label>
+      <input type="radio" id="dept-plan" name="dept-select" value="企劃部"><label for="dept-plan">企劃部</label>
+      <input type="radio" id="dept-admin" name="dept-select" value="管理部"><label for="dept-admin">管理部</label>
+      <div class="ios-segmented-slider"></div>
+    </div>
+
+    <label class="section-micro-label">FULL NAME (姓名全名)</label>
+    <div class="apple-input-box"><input type="text" id="apple-user-fullname" placeholder="例：翁淳豪"></div>
+
+    <label class="section-micro-label">GMAIL ADDRESS (電子信箱)</label>
+    <div class="apple-input-box"><input type="email" id="apple-user-email" placeholder="name@ttad.com.tw"></div>
+    
+    <label class="section-micro-label">DATE OF ENTRY (入職年月)</label>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+      <div class="apple-input-box" style="margin-bottom:0;"><select id="apple-user-tenure-year"></select></div>
+      <div class="apple-input-box" style="margin-bottom:0;"><select id="apple-user-tenure-month">
+        <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
+        <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
+        <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
+      </select></div>
+    </div>
+
+    <button class="btn btn-primary" style="width: 100%; padding: 14px; border-radius: 12px;" onclick="handlePasscodeLogin()">驗證並進入系統</button>
+  </div>
+</div>
+
+<!-- ══════════════ 2. 主系統 ══════════════ -->
+<div id="main-app" style="display: none;">
+  <header class="topbar">
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <div class="brand-title">TTAD GROUP 天子創意來客週報表</div>
+      <!-- 週次智慧切換 -->
+      <div class="week-navigator">
+        <button class="week-btn" onclick="app.changeWeek(-1)">← 上週</button>
+        <button class="week-btn active" id="current-week-display">本週</button>
+        <button class="week-btn" onclick="app.changeWeek(1)">下週 →</button>
+      </div>
+    </div>
+    <div class="user-meta-card">
+      <span id="user-name" class="meta-name">--</span>
+      <span id="user-dept" class="badge badge-dept">--</span>
+      <span id="user-tenure" class="meta-tenure">--</span>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-capsule btn-sm" id="btn-4k-screenshot">螢幕截圖</button>
+      <button class="btn btn-capsule btn-sm" id="btn-staff-edit" style="display:none; color:var(--apple-blue);" onclick="app.openStaffModal()">人員編輯</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="app.logout()">登出</button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- 管理部主控台 -->
+    <section id="admin-panel" class="card" style="display: none;">
+      <div class="card-header">
+        <span class="card-title">🏢 管理部決策主控台</span>
+        <button class="btn btn-primary btn-sm" onclick="app.switchToFrontend()">前往前台視角</button>
+      </div>
+      <div class="card-body">
+        <div class="pill-label" style="font-size:11px; font-weight:700; color:var(--text-muted);">選擇企劃人員</div>
+        <div id="planner-pills" class="pill-container" style="margin-bottom:20px;"></div>
+        <div class="pill-label" style="font-size:11px; font-weight:700; color:var(--text-muted);">選擇設計人員</div>
+        <div id="designer-pills" class="pill-container"></div>
+      </div>
+    </section>
+
+    <!-- 個案列表 -->
+    <main id="project-list-container"></main>
+  </div>
+</div>
+
+<!-- ══════════════ 3. 人員編輯管理彈窗 ══════════════ -->
+<div class="modal-overlay" id="staff-modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-title">👥 天子創意同仁名單管理</span>
+      <button class="btn btn-ghost btn-sm" onclick="app.closeStaffModal()" style="font-size: 16px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- 新增同仁 -->
+      <div class="staff-form-row">
+        <div class="form-group">
+          <label class="form-label" style="font-size:10px; font-weight:700; margin-bottom: 4px; display:block;">姓名全名</label>
+          <input type="text" id="m-staff-name" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="例：翁淳豪">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:10px; font-weight:700; margin-bottom: 4px; display:block;">Gmail 帳號</label>
+          <input type="email" id="m-staff-email" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="name@ttad.com.tw">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:10px; font-weight:700; margin-bottom: 4px; display:block;">部門</label>
+          <select id="m-staff-dept" class="form-select" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;">
+            <option value="企劃部">企劃部</option>
+            <option value="設計部">設計部</option>
+            <option value="管理部">管理部</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 20px; align-items: flex-end;">
+        <div class="form-group">
+          <label class="form-label" style="font-size:10px; font-weight:700; margin-bottom: 4px; display:block;">入職年份</label>
+          <select id="m-staff-join-year" class="form-select" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:10px; font-weight:700; margin-bottom: 4px; display:block;">入職月份</label>
+          <select id="m-staff-join-month" class="form-select" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;">
+            <option value="1">1 月入職</option><option value="2">2 月入職</option><option value="3">3 月入職</option><option value="4">4 月入職</option>
+            <option value="5">5 月入職</option><option value="6">6 月入職</option><option value="7">7 月入職</option><option value="8">8 月入職</option>
+            <option value="9">9 月入職</option><option value="10">10 月入職</option><option value="11">11 月入職</option><option value="12">12 月入職</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="app.addPersonnel()" style="height:35px;">新增同仁</button>
+      </div>
+      <hr style="border:0; border-top: 1px solid var(--apple-border); margin:16px 0;">
+      <!-- 同仁列表 -->
+      <div id="modal-staff-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 4. 數據填報彈窗 ══════════════ -->
+<div class="modal-overlay" id="data-entry-modal">
+  <div class="modal-container" style="max-width: 500px;">
+    <div class="modal-header">
+      <span class="modal-title" id="data-modal-title">填報週報數據</span>
+      <button class="btn btn-ghost btn-sm" onclick="app.closeDataModal()" style="font-size: 16px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="entry-project-id">
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">週間來客 (組)</label>
+          <input type="number" id="entry-visits" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">當週成交 (組)</label>
+          <input type="number" id="entry-deals" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="0">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">總戶數 (戶)</label>
+          <input type="number" id="entry-total-units" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">累計銷售 (戶)</label>
+          <input type="number" id="entry-acc-sales" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="0">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">現場反應</label>
+        <textarea id="entry-feedback" class="form-textarea" style="width:100%; height:60px; border:1px solid var(--apple-border); padding:8px; border-radius:6px; font-family:var(--font);" placeholder="請輸入現場來客反應..."></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">目前媒體</label>
+        <textarea id="entry-current-media" class="form-textarea" style="width:100%; height:60px; border:1px solid var(--apple-border); padding:8px; border-radius:6px; font-family:var(--font);" placeholder="請輸入目前媒體配置..."></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">後續媒體</label>
+        <textarea id="entry-future-media" class="form-textarea" style="width:100%; height:60px; border:1px solid var(--apple-border); padding:8px; border-radius:6px; font-family:var(--font);" placeholder="請輸入後續媒體規劃..."></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-secondary" onclick="app.closeDataModal()">取消</button>
+        <button class="btn btn-primary" onclick="app.saveDataEntry()">儲存數據</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1h1M0aYwS8nwEgUnlpBXj1rxWbEbzhvSfZzB5NHbcS20/gviz/tq?gid=1006460624';
+const ADMIN_WHITELIST = ['alains.chou@gmail.com', 'yuhsia0911@gmail.com'];
+
+let STAFF_DATABASE = {
+  'alains.chou@gmail.com': { name: '周于堯', joinYear: 2018, joinMonth: 6, dept: '管理部' },
+  'yuhsia0911@gmail.com': { name: '古欣代', joinYear: 2020, joinMonth: 9, dept: '管理部' },
+  'honghong.chen@gmail.com': { name: '陳虹鴻', joinYear: 2021, joinMonth: 3, dept: '企劃部' },
+  'wanching.cheng@gmail.com': { name: '程婉菁', joinYear: 2022, joinMonth: 5, dept: '企劃部' },
+  'chunhao.weng@gmail.com': { name: '翁淳豪', joinYear: 2020, joinMonth: 8, dept: '企劃部' },
+  'nairen.chang@gmail.com': { name: '張乃仁', joinYear: 2023, joinMonth: 1, dept: '企劃部' },
+  'tsunglin.yang@gmail.com': { name: '楊宗霖', joinYear: 2024, joinMonth: 2, dept: '企劃部' },
+  'you.li@gmail.com': { name: '李由', joinYear: 2022, joinMonth: 11, dept: '企劃部' },
+  'kuowei.wu@gmail.com': { name: '吳國瑋', joinYear: 2017, joinMonth: 4, dept: '企劃部' },
+  'kuanju.lu@gmail.com': { name: '呂冠儒', joinYear: 2021, joinMonth: 7, dept: '設計部' },
+  'kaihan.yang@gmail.com': { name: '楊凱翰', joinYear: 2022, joinMonth: 1, dept: '設計部' },
+  'hsinyi.huang@gmail.com': { name: '黃馨儀', joinYear: 2020, joinMonth: 11, dept: '設計部' },
+  'chingchun.lin@gmail.com': { name: '林敬淳', joinYear: 2019, joinMonth: 5, dept: '設計部' },
+  'chiaying.lin@gmail.com': { name: '林佳螢', joinYear: 2023, joinMonth: 6, dept: '設計部' },
+  'chienyi.yang@gmail.com': { name: '楊千儀', joinYear: 2022, joinMonth: 9, dept: '設計部' },
+  'wenchi.chien@gmail.com': { name: '錢玟騏', joinYear: 2021, joinMonth: 12, dept: '設計部' },
+  'chienlin.chen@gmail.com': { name: '陳建霖', joinYear: 2020, joinMonth: 4, dept: '設計部' },
+  'cuimiao.hung@gmail.com': { name: '洪翠妙', joinYear: 2023, joinMonth: 10, dept: '設計部' }
+};
+
+let WEEKLY_RECORDS_DB = {};
+
+function saveStaffDatabase() { localStorage.setItem('ttad_staff_db_v4', JSON.stringify(STAFF_DATABASE)); }
+function loadStaffDatabase() {
+  const saved = localStorage.getItem('ttad_staff_db_v4');
+  if (saved) STAFF_DATABASE = JSON.parse(saved);
+}
+
+function saveWeeklyRecords() { localStorage.setItem('ttad_weekly_records_db_v4', JSON.stringify(WEEKLY_RECORDS_DB)); }
+function loadWeeklyRecords() {
+  const saved = localStorage.getItem('ttad_weekly_records_db_v4');
+  if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
+}
+
+function getCalculatedTenure(year, month) {
+  const now = new Date();
+  let years = 2026 - year;
+  let months = 6 - month;
+  if (months < 0) { years -= 1; months += 12; }
+  return `${years} 年 ${months} 個月`;
+}
+
+// ── 系統核心 TtadApp ──
+class TtadApp {
+  constructor() {
+    this.projectDb = [];
+    this.selectedPlannerFilter = '全部企劃';
+    this.selectedDesignerFilter = '全部設計';
+    this.currentWeekOffset = 0;
+  }
+
+  async init(name, dept, tenure) {
+    this.currentStaffName = name;
+    this.currentDept = dept;
+    document.getElementById('user-name').textContent = name;
+    document.getElementById('user-dept').textContent = dept;
+    document.getElementById('user-tenure').textContent = `年資: ${tenure}`;
+    
+    this.updateWeekDisplay();
+    await this.fetchData();
+    
+    if (dept === '管理部') {
+      document.getElementById('admin-panel').style.display = 'block';
+      document.getElementById('btn-staff-edit').style.display = 'inline-flex';
+      this.initAdminFilters();
+    } else {
+      document.getElementById('admin-panel').style.display = 'none';
+      document.getElementById('btn-staff-edit').style.display = 'none';
+    }
+    this.renderProjectList();
+    this.setupGlobalEvents();
+  }
+
+  updateWeekDisplay() {
+    const label = getWeekString(this.currentWeekOffset);
+    document.getElementById('current-week-display').textContent = `報表週別: ${label}`;
+  }
+
+  changeWeek(direction) {
+    this.currentWeekOffset += direction;
+    this.updateWeekDisplay();
+    this.renderProjectList();
+  }
+
+  async fetchData() {
+    try {
+      const resp = await fetch(GOOGLE_SHEET_URL);
+      const text = await resp.text();
+      const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+      
+      this.projectDb = json.table.rows.slice(1).map((r, index) => {
+        const getCell = (idx) => (r.c && r.c[idx] && r.c[idx].v !== null) ? String(r.c[idx].v).trim() : '';
+        const fullName = getCell(2); // C欄 建設-案名 (寶登建設-寶太上境)
+        let company = '天子創意';
+        let prjName = fullName;
+        if (fullName.includes('-')) {
+          company = fullName.split('-')[0].trim();
+          prjName = fullName.split('-')[1].trim();
+        } else if (fullName.includes('．')) {
+          company = fullName.split('．')[0].trim();
+          prjName = fullName.split('．')[1].trim();
+        }
+
+        return {
+          id: String(index + 1),
+          category: getCell(0), // A欄 類別
+          location: getCell(1), // B欄 區域地址
+          company: company,
+          name: prjName,
+          stage: getCell(3), // D欄 狀態
+          planner: getCell(7), // H欄 負責企劃
+          designer: getCell(8) // I欄 負責設計
+        };
+      });
+    } catch(e) { console.error('資料載入失敗', e); }
+  }
+
+  initAdminFilters() {
+    const planners = ['全部企劃', ...new Set(Object.values(STAFF_DATABASE).filter(u=>u.dept==='企劃部').map(u=>u.name))];
+    const designers = ['全部設計', ...new Set(Object.values(STAFF_DATABASE).filter(u=>u.dept==='設計部').map(u=>u.name))];
+    
+    document.getElementById('planner-pills').innerHTML = planners.map(n => 
+      `<button class="pill-btn ${n===this.selectedPlannerFilter?'active':''}" onclick="app.selectPlannerFilter('${n}')">${n}</button>`
+    ).join('');
+    
+    document.getElementById('designer-pills').innerHTML = designers.map(n => 
+      `<button class="pill-btn ${n===this.selectedDesignerFilter?'active':''}" onclick="app.selectDesignerFilter('${n}')">${n}</button>`
+    ).join('');
+  }
+
+  selectPlannerFilter(n) { 
+    this.selectedPlannerFilter = n; 
+    this.selectedDesignerFilter = '全部設計'; // 清除交叉過濾
+    this.initAdminFilters(); 
+    this.renderProjectList(); 
+  }
+
+  selectDesignerFilter(n) { 
+    this.selectedDesignerFilter = n; 
+    this.selectedPlannerFilter = '全部企劃'; // 清除交叉過濾
+    this.initAdminFilters(); 
+    this.renderProjectList(); 
+  }
+
+  switchToFrontend() { 
+    this.currentDept = '企劃部'; 
+    document.getElementById('admin-panel').style.display='none'; 
+    this.renderProjectList(); 
+  }
+
+  // 智慧週次跨週繼承核心
+  getProjectInheritedData(projectId) {
+    const currentWeek = getWeekString(this.currentWeekOffset);
+    const prevWeek = getPrevWeekKey(currentWeek);
+
+    const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
+    const prevRecord = (WEEKLY_RECORDS_DB[prevWeek] && WEEKLY_RECORDS_DB[prevWeek][projectId]) || {};
+
+    // 1. 總戶數繼承
+    const totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : (prevRecord.totalUnits !== undefined ? prevRecord.totalUnits : 0);
+    
+    // 2. 累積銷售 = 上週累積銷售 + 本週成交
+    let accSales = 0;
+    if (currentRecord.accSales !== undefined && currentRecord.accSales !== 0) {
+      accSales = currentRecord.accSales;
+    } else {
+      const prevAcc = prevRecord.accSales !== undefined ? prevRecord.accSales : 0;
+      const currentDeals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
+      accSales = prevAcc + currentDeals;
+    }
+
+    // 3. 其他指標繼承
+    const visits = currentRecord.visits !== undefined ? currentRecord.visits : 0;
+    const deals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
+    const feedback = currentRecord.feedback || prevRecord.feedback || '暫無反應。';
+    const currentMedia = currentRecord.currentMedia || prevRecord.currentMedia || '暫無媒體。';
+    const futureMedia = currentRecord.futureMedia || prevRecord.futureMedia || '暫無規劃。';
+
+    // 4. 去化率計算
+    const progress = totalUnits > 0 ? ((accSales / totalUnits) * 100).toFixed(1) : '0.0';
+
+    return {
+      visits,
+      deals,
+      accSales,
+      totalUnits,
+      feedback,
+      currentMedia,
+      futureMedia,
+      progress
+    };
+  }
+
+  renderProjectList() {
+    const container = document.getElementById('project-list-container');
+    
+    const filtered = this.projectDb.filter(p => {
+      // 過濾隱藏「已結案」與狀態為「8」開頭的建案
+      const isClosed = p.stage.includes('結案') || p.stage.startsWith('8');
+      if (isClosed) return false;
+
+      if (this.currentDept === '管理部') {
+        if (this.selectedPlannerFilter !== '全部企劃' && p.planner !== this.selectedPlannerFilter) return false;
+        if (this.selectedDesignerFilter !== '全部設計' && p.designer !== this.selectedDesignerFilter) return false;
+        return true;
+      }
+      return p.planner === this.currentStaffName || p.designer === this.currentStaffName;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無負責的個案項目</div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(p => {
+      const metrics = this.getProjectInheritedData(p.id);
+      const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
+
+      return `
+        <div class="project-card">
+          <!-- 左側建案元資訊 -->
+          <div>
+            <div style="display:flex; align-items:center; margin-bottom:8px;">
+              <span class="badge-tag" style="background: ${categoryColor}; color: white; border-radius:4px; padding:2px 6px; font-size:10px;">${p.category}</span>
+              <span style="font-size:11px; color:var(--text-muted);">📍 ${p.location}</span>
+            </div>
+            <div class="pj-name">${p.company}-${p.name}</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:12px;">
+              企劃：<b>${p.planner || '無'}</b> ｜ 設計：<b>${p.designer || '無'}</b> ｜ 狀態：<b>${p.stage}</b>
+            </div>
+          </div>
+
+          <!-- 右側核心銷控數據網格 -->
+          <div class="pj-data-grid">
+            <div>
+              <div class="data-label">週間來客</div>
+              <div class="data-value"><b>${metrics.visits}</b><span style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</span></div>
+            </div>
+            <div>
+              <div class="data-label">當週成交</div>
+              <div class="data-value" style="color: var(--green);"><b>${metrics.deals}</b><span style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</span></div>
+            </div>
+            <div>
+              <div class="data-label">累售 / 總戶</div>
+              <div class="data-value"><b>${metrics.accSales}</b><span style="font-size:13px; color:var(--text-muted);"> / ${metrics.totalUnits}</span></div>
+            </div>
+          </div>
+
+          <!-- 填報按鈕 -->
+          <div style="display:flex; align-items:center; justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="app.openDataModal('${p.id}', '${p.company}-${p.name}')">填報數據</button>
+          </div>
+
+          <!-- 下方四格填報反饋與媒體（含智慧週次繼承顯示） -->
+          <div class="reports-summary-grid">
+            <div class="report-box">
+              <div class="report-box-title">📈 去化進度</div>
+              <div class="report-box-content" style="font-size:14px; font-weight:700; color: var(--apple-blue);">
+                ${metrics.progress}% <span style="font-size:11px; font-weight:400; color:var(--text-muted); margin-left:4px;">(累售 ${metrics.accSales} 戶 ｜ 總戶 ${metrics.totalUnits} 戶)</span>
+              </div>
+            </div>
+            <div class="report-box">
+              <div class="report-box-title">🗣 現場反應</div>
+              <div class="report-box-content">${metrics.feedback}</div>
+            </div>
+            <div class="report-box">
+              <div class="report-box-title">📺 目前媒體</div>
+              <div class="report-box-content">${metrics.currentMedia}</div>
+            </div>
+            <div class="report-box">
+              <div class="report-box-title">🔮 後續媒體</div>
+              <div class="report-box-content">${metrics.futureMedia}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── 數據填報彈窗控制器 ──
+  openDataModal(id, title) {
+    document.getElementById('data-entry-modal').style.display = 'flex';
+    document.getElementById('data-modal-title').textContent = `填報數據 ➔ ${title}`;
+    document.getElementById('entry-project-id').value = id;
+
+    const metrics = this.getProjectInheritedData(id);
+    document.getElementById('entry-visits').value = metrics.visits || '';
+    document.getElementById('entry-deals').value = metrics.deals || '';
+    document.getElementById('entry-total-units').value = metrics.totalUnits || '';
+    document.getElementById('entry-acc-sales').value = metrics.accSales || '';
+    document.getElementById('entry-feedback').value = metrics.feedback === '暫無反應。' ? '' : metrics.feedback;
+    document.getElementById('entry-current-media').value = metrics.currentMedia === '暫無媒體。' ? '' : metrics.currentMedia;
+    document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
+  }
+
+  closeDataModal() { document.getElementById('data-entry-modal').style.display = 'none'; }
+
+  saveDataEntry() {
+    const id = document.getElementById('entry-project-id').value;
+    const currentWeek = getWeekString(this.currentWeekOffset);
+
+    if (!WEEKLY_RECORDS_DB[currentWeek]) WEEKLY_RECORDS_DB[currentWeek] = {};
+    
+    WEEKLY_RECORDS_DB[currentWeek][id] = {
+      visits: parseInt(document.getElementById('entry-visits').value) || 0,
+      deals: parseInt(document.getElementById('entry-deals').value) || 0,
+      totalUnits: parseInt(document.getElementById('entry-total-units').value) || 0,
+      accSales: parseInt(document.getElementById('entry-acc-sales').value) || 0,
+      feedback: document.getElementById('entry-feedback').value.trim(),
+      currentMedia: document.getElementById('entry-current-media').value.trim(),
+      futureMedia: document.getElementById('entry-future-media').value.trim()
+    };
+
+    saveWeeklyRecords();
+    this.closeDataModal();
+    this.renderProjectList();
+    this.showToast('✅ 週報數據已成功儲存並同步繼承屬性！');
+  }
+
+  // ── 人員管理面板 ──
+  openStaffModal() {
+    document.getElementById('staff-modal-overlay').style.display = 'flex';
+    this.renderStaffList();
+  }
+  closeStaffModal() { document.getElementById('staff-modal-overlay').style.display = 'none'; }
+
+  renderStaffList() {
+    const container = document.getElementById('modal-staff-list');
+    container.innerHTML = Object.entries(STAFF_DATABASE).map(([email, user]) => {
+      const isLocked = ADMIN_WHITELIST.includes(email);
+      const tenureDisplay = getCalculatedTenure(user.joinYear, user.joinMonth);
+      return `
+        <div class="staff-list-item">
+          <div>
+            <span class="staff-list-name">${user.name}</span>
+            <span class="badge" style="background:rgba(0,0,0,0.05); font-size:10px; margin-left:6px; padding:2px 8px; border-radius:4px;">${user.dept}</span>
+            <div class="staff-list-meta">Gmail: ${email} ｜ 入職: ${user.joinYear}/${user.joinMonth} (${tenureDisplay})</div>
+          </div>
+          <div>
+            ${isLocked ? '<span style="font-size: 11px; color: var(--text-muted); font-weight:600;">🔒 系統主管</span>' : 
+            `<button class="btn btn-ghost btn-sm" style="color:var(--red); padding:4px 8px;" onclick="app.deletePersonnel('${email}')">離職刪除</button>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  addPersonnel() {
+    const name = document.getElementById('m-staff-name').value.trim();
+    const email = document.getElementById('m-staff-email').value.trim().toLowerCase();
+    const dept = document.getElementById('m-staff-dept').value;
+    const year = parseInt(document.getElementById('m-staff-join-year').value);
+    const month = parseInt(document.getElementById('m-staff-join-month').value);
+
+    if (!name || !email || !year || !month) { alert('請填寫完整的新同仁基本資料'); return; }
+    if (STAFF_DATABASE[email]) { alert('此同仁帳號已存在名單中。'); return; }
+
+    STAFF_DATABASE[email] = { name, joinYear: year, joinMonth: month, dept };
+    saveStaffDatabase();
+    
+    document.getElementById('m-staff-name').value = '';
+    document.getElementById('m-staff-email').value = '';
+    
+    this.renderStaffList();
+    this.initAdminFilters();
+    this.renderProjectList();
+    this.showToast(`✅ 新同仁 ${name} 已成功註冊入名單！`);
+  }
+
+  deletePersonnel(email) {
+    if (ADMIN_WHITELIST.includes(email)) return;
+    const name = STAFF_DATABASE[email]?.name || '同仁';
+    if (!confirm(`確定要將「${name}」從系統同仁名單中刪除並標記為離職嗎？`)) return;
+
+    delete STAFF_DATABASE[email];
+    saveStaffDatabase();
+    
+    this.renderStaffList();
+    this.initAdminFilters();
+    this.renderProjectList();
+    this.showToast(`❌ 已成功移除同仁資料`);
+  }
+
+  logout() {
+    localStorage.clear();
+    location.reload();
+  }
+
+  showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+  }
+
+  setupGlobalEvents() {
+    document.getElementById('btn-4k-screenshot').onclick = () => {
+      this.showToast('📸 正在啟用高解析度畫布渲染，請稍候...');
+      const element = document.getElementById('project-list-container');
+      html2canvas(element, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#F5F5F7'
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `[天子創意]_${this.currentStaffName}_週報_${getWeekString(this.currentWeekOffset)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        this.showToast('✅ 螢幕截圖已儲存並下載！');
+      });
+    };
+  }
+}
+
+const app = new TtadApp();
+
+// ── 啟動與登入邏輯 ──
+document.addEventListener('DOMContentLoaded', () => {
+  loadStaffDatabase();
+  loadWeeklyRecords();
+  
+  const yearEl = document.getElementById('apple-user-tenure-year');
+  const modalYearEl = document.getElementById('m-staff-join-year');
+  const populateYears = (el) => {
+    if (el) {
+      el.innerHTML = '<option value="">入職年份</option>';
+      for (let y = 2026; y >= 2000; y--) {
+        let opt = document.createElement('option'); opt.value = y; opt.textContent = `${y} 年`; el.appendChild(opt);
+      }
+    }
+  };
+  populateYears(yearEl);
+  populateYears(modalYearEl);
+
+  // 智慧自動登入
+  const m = localStorage.getItem('ttad_mail');
+  const n = localStorage.getItem('ttad_name');
+  const d = localStorage.getItem('ttad_dept');
+  const y = localStorage.getItem('ttad_year');
+  const mo = localStorage.getItem('ttad_month');
+
+  if (m && n && d) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    app.init(n, d, getCalculatedTenure(y, mo));
+  }
+});
+
+function handlePasscodeLogin() {
+  const name = document.getElementById('apple-user-fullname').value.trim();
+  const mail = document.getElementById('apple-user-email').value.trim();
+  const year = document.getElementById('apple-user-tenure-year').value;
+  const month = document.getElementById('apple-user-tenure-month').value;
+  const dept = document.querySelector('input[name="dept-select"]:checked').value;
+
+  if (!name || !mail || !year || !month) { alert('請填寫完整的登入資訊'); return; }
+
+  localStorage.setItem('ttad_mail', mail);
+  localStorage.setItem('ttad_name', name);
+  localStorage.setItem('ttad_dept', dept);
+  localStorage.setItem('ttad_year', year);
+  localStorage.setItem('ttad_month', month);
+
+  // 自動將登入者同步進 STAFF_DATABASE 字典
+  if (!STAFF_DATABASE[mail]) {
+    STAFF_DATABASE[mail] = { name, joinYear: parseInt(year), joinMonth: parseInt(month), dept };
+    saveStaffDatabase();
+  }
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  app.init(name, dept, getCalculatedTenure(year, month));
+}
+</script>
+</body>
+</html>
