@@ -335,6 +335,31 @@ function loadWeeklyRecords() {
   if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
 }
 
+// 去除名字中所有的空白字元，防止 full-width / half-width 造成的比對失敗
+const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
+
+function getWeekString(offset = 0) {
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + (offset * 7));
+  const startOfYear = new Date(targetDate.getFullYear(), 0, 1);
+  const weekNum = Math.ceil((((targetDate - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
+  return `${targetDate.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+function getPrevWeekKey(weekKey) {
+  const parts = weekKey.split('-W');
+  if (parts.length !== 2) return weekKey;
+  let year = parseInt(parts[0]);
+  let week = parseInt(parts[1]);
+  if (week > 1) {
+    week -= 1;
+  } else {
+    year -= 1;
+    week = 52;
+  }
+  return `${year}-W${String(week).padStart(2, '0')}`;
+}
+
 function getCalculatedTenure(year, month) {
   const now = new Date();
   let years = 2026 - year;
@@ -353,7 +378,7 @@ class TtadApp {
   }
 
   async init(name, dept, tenure) {
-    this.currentStaffName = name;
+    this.currentStaffName = sanitizeName(name);
     this.currentDept = dept;
     document.getElementById('user-name').textContent = name;
     document.getElementById('user-dept').textContent = dept;
@@ -393,7 +418,7 @@ class TtadApp {
       
       this.projectDb = json.table.rows.slice(1).map((r, index) => {
         const getCell = (idx) => (r.c && r.c[idx] && r.c[idx].v !== null) ? String(r.c[idx].v).trim() : '';
-        const fullName = getCell(2); // C欄 建設-案名 (寶登建設-寶太上境)
+        const fullName = getCell(2); 
         let company = '天子創意';
         let prjName = fullName;
         if (fullName.includes('-')) {
@@ -411,16 +436,55 @@ class TtadApp {
           company: company,
           name: prjName,
           stage: getCell(3), // D欄 狀態
-          planner: getCell(7), // H欄 負責企劃
-          designer: getCell(8) // I欄 負責設計
+          planner: sanitizeName(getCell(7)), // H欄 負責企劃 (去除空白)
+          designer: sanitizeName(getCell(8)) // I欄 負責設計 (去除空白)
         };
       });
+
+      // 自動同步雲端試算表中新增的新同仁
+      this.syncNewColleaguesFromSheet();
+
     } catch(e) { console.error('資料載入失敗', e); }
   }
 
+  syncNewColleaguesFromSheet() {
+    let hasChanges = false;
+    const currentStaffNames = Object.values(STAFF_DATABASE).map(u => sanitizeName(u.name));
+
+    this.projectDb.forEach(pj => {
+      const excludeNames = ['周于堯', '古欣代', '外發', '外發人員', '無', ''];
+      if (pj.planner && !excludeNames.includes(pj.planner) && !currentStaffNames.includes(pj.planner)) {
+        const virtualEmail = `${pj.planner.toLowerCase()}@ttad.com.tw`;
+        STAFF_DATABASE[virtualEmail] = {
+          name: pj.planner,
+          joinYear: 2026,
+          joinMonth: 1,
+          dept: '企劃部'
+        };
+        currentStaffNames.push(pj.planner);
+        hasChanges = true;
+      }
+      if (pj.designer && !excludeNames.includes(pj.designer) && !currentStaffNames.includes(pj.designer)) {
+        const virtualEmail = `${pj.designer.toLowerCase()}@ttad.com.tw`;
+        STAFF_DATABASE[virtualEmail] = {
+          name: pj.designer,
+          joinYear: 2026,
+          joinMonth: 1,
+          dept: '設計部'
+        };
+        currentStaffNames.push(pj.designer);
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      saveStaffDatabase();
+    }
+  }
+
   initAdminFilters() {
-    const planners = ['全部企劃', ...new Set(Object.values(STAFF_DATABASE).filter(u=>u.dept==='企劃部').map(u=>u.name))];
-    const designers = ['全部設計', ...new Set(Object.values(STAFF_DATABASE).filter(u=>u.dept==='設計部').map(u=>u.name))];
+    const planners = ['全部企劃', ...new Set(Object.values(STAFF_DATABASE).filter(u=>u.dept==='企劃部').map(u=>sanitizeName(u.name)))];
+    const designers = ['全部設計', ...new Set(Object.values(STAFF_DATABASE).filter(u=>u.dept==='設計部').map(u=>sanitizeName(u.name)))];
     
     document.getElementById('planner-pills').innerHTML = planners.map(n => 
       `<button class="pill-btn ${n===this.selectedPlannerFilter?'active':''}" onclick="app.selectPlannerFilter('${n}')">${n}</button>`
@@ -432,14 +496,14 @@ class TtadApp {
   }
 
   selectPlannerFilter(n) { 
-    this.selectedPlannerFilter = n; 
+    this.selectedPlannerFilter = sanitizeName(n); 
     this.selectedDesignerFilter = '全部設計'; // 清除交叉過濾
     this.initAdminFilters(); 
     this.renderProjectList(); 
   }
 
   selectDesignerFilter(n) { 
-    this.selectedDesignerFilter = n; 
+    this.selectedDesignerFilter = sanitizeName(n); 
     this.selectedPlannerFilter = '全部企劃'; // 清除交叉過濾
     this.initAdminFilters(); 
     this.renderProjectList(); 
@@ -451,35 +515,45 @@ class TtadApp {
     this.renderProjectList(); 
   }
 
-  // 智慧週次跨週繼承核心
+  // 智慧週次跨週繼承核心 (自動追溯過去填寫過的最深 12 週記錄)
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
-    const prevWeek = getPrevWeekKey(currentWeek);
-
     const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
-    const prevRecord = (WEEKLY_RECORDS_DB[prevWeek] && WEEKLY_RECORDS_DB[prevWeek][projectId]) || {};
 
-    // 1. 總戶數繼承
-    const totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : (prevRecord.totalUnits !== undefined ? prevRecord.totalUnits : 0);
-    
-    // 2. 累積銷售 = 上週累積銷售 + 本週成交
-    let accSales = 0;
-    if (currentRecord.accSales !== undefined && currentRecord.accSales !== 0) {
-      accSales = currentRecord.accSales;
-    } else {
-      const prevAcc = prevRecord.accSales !== undefined ? prevRecord.accSales : 0;
-      const currentDeals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
-      accSales = prevAcc + currentDeals;
+    // 往前找尋上週或歷史最近一次的填寫紀錄
+    let feedback = currentRecord.feedback || '';
+    let currentMedia = currentRecord.currentMedia || '';
+    let futureMedia = currentRecord.futureMedia || '';
+    let totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : 0;
+    let accSales = currentRecord.accSales !== undefined && currentRecord.accSales !== 0 ? currentRecord.accSales : 0;
+
+    // 重新校正追溯邏輯 (不破壞構造，乾淨迭代)
+    let checkWeek = getPrevWeekKey(currentWeek);
+    for (let i = 0; i < 12; i++) {
+      const historicalRec = WEEKLY_RECORDS_DB[checkWeek] ? WEEKLY_RECORDS_DB[checkWeek][projectId] : null;
+      if (historicalRec) {
+        if (!feedback && historicalRec.feedback) feedback = historicalRec.feedback;
+        if (!currentMedia && historicalRec.currentMedia) currentMedia = historicalRec.currentMedia;
+        if (!futureMedia && historicalRec.futureMedia) futureMedia = historicalRec.futureMedia;
+        if (totalUnits === 0 && historicalRec.totalUnits) totalUnits = historicalRec.totalUnits;
+        if (accSales === 0 && historicalRec.accSales) {
+          // 累積銷售繼承上週累售 + 本週成交
+          const currentDeals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
+          accSales = historicalRec.accSales + currentDeals;
+        }
+      }
+      checkWeek = getPrevWeekKey(checkWeek);
     }
 
-    // 3. 其他指標繼承
+    // fallback
+    if (!feedback) feedback = '暫無反應。';
+    if (!currentMedia) currentMedia = '暫無媒體。';
+    if (!futureMedia) futureMedia = '暫無規劃。';
+    
     const visits = currentRecord.visits !== undefined ? currentRecord.visits : 0;
     const deals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
-    const feedback = currentRecord.feedback || prevRecord.feedback || '暫無反應。';
-    const currentMedia = currentRecord.currentMedia || prevRecord.currentMedia || '暫無媒體。';
-    const futureMedia = currentRecord.futureMedia || prevRecord.futureMedia || '暫無規劃。';
+    if (accSales === 0) accSales = deals; // 預設
 
-    // 4. 去化率計算
     const progress = totalUnits > 0 ? ((accSales / totalUnits) * 100).toFixed(1) : '0.0';
 
     return {
@@ -498,20 +572,35 @@ class TtadApp {
     const container = document.getElementById('project-list-container');
     
     const filtered = this.projectDb.filter(p => {
-      // 過濾隱藏「已結案」與狀態為「8」開頭的建案
+      // 智慧過濾：凡狀態含「結案」或「8.」開頭直接隱藏
       const isClosed = p.stage.includes('結案') || p.stage.startsWith('8');
       if (isClosed) return false;
 
       if (this.currentDept === '管理部') {
-        if (this.selectedPlannerFilter !== '全部企劃' && p.planner !== this.selectedPlannerFilter) return false;
-        if (this.selectedDesignerFilter !== '全部設計' && p.designer !== this.selectedDesignerFilter) return false;
-        return true;
+        let matchPlanner = true;
+        let matchDesigner = true;
+
+        if (this.selectedPlannerFilter !== '全部企劃') {
+          matchPlanner = (p.planner === this.selectedPlannerFilter);
+        }
+        if (this.selectedDesignerFilter !== '全部設計') {
+          matchDesigner = (p.designer === this.selectedDesignerFilter);
+        }
+
+        if (this.selectedPlannerFilter !== '全部企劃' && this.selectedDesignerFilter !== '全部設計') {
+          return matchPlanner && matchDesigner;
+        } else if (this.selectedPlannerFilter !== '全部企劃') {
+          return matchPlanner;
+        } else if (this.selectedDesignerFilter !== '全部設計') {
+          return matchDesigner;
+        }
+        return true; 
       }
       return p.planner === this.currentStaffName || p.designer === this.currentStaffName;
     });
 
     if (filtered.length === 0) {
-      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無負責的個案項目</div>';
+      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無您負責或符合篩選條件的個案項目</div>';
       return;
     }
 
@@ -523,30 +612,20 @@ class TtadApp {
         <div class="project-card">
           <!-- 左側建案元資訊 -->
           <div>
-            <div style="display:flex; align-items:center; margin-bottom:8px;">
-              <span class="badge-tag" style="background: ${categoryColor}; color: white; border-radius:4px; padding:2px 6px; font-size:10px;">${p.category}</span>
-              <span style="font-size:11px; color:var(--text-muted);">📍 ${p.location}</span>
+            <div class="pj-company">${p.company}</div>
+            <div class="pj-name">${p.name}</div>
+            <div style="margin-bottom: 12px;">
+              <span class="badge-tag" style="background:${categoryColor}; color:white;">${p.category}</span>
+              <span style="font-size:11px; color:var(--text-muted)">📍 ${p.location}</span>
             </div>
-            <div class="pj-name">${p.company}-${p.name}</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:12px;">
-              企劃：<b>${p.planner || '無'}</b> ｜ 設計：<b>${p.designer || '無'}</b> ｜ 狀態：<b>${p.stage}</b>
-            </div>
+            <div style="font-size:11px; color:var(--text-muted)">👤 企劃: ${p.planner} ｜ 🎨 設計: ${p.designer} ｜ 狀態: ${p.stage}</div>
           </div>
 
-          <!-- 右側核心銷控數據網格 -->
+          <!-- 右側核心數據展示 -->
           <div class="pj-data-grid">
-            <div>
-              <div class="data-label">週間來客</div>
-              <div class="data-value"><b>${metrics.visits}</b><span style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</span></div>
-            </div>
-            <div>
-              <div class="data-label">當週成交</div>
-              <div class="data-value" style="color: var(--green);"><b>${metrics.deals}</b><span style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</span></div>
-            </div>
-            <div>
-              <div class="data-label">累售 / 總戶</div>
-              <div class="data-value"><b>${metrics.accSales}</b><span style="font-size:13px; color:var(--text-muted);"> / ${metrics.totalUnits}</span></div>
-            </div>
+            <div><div class="data-label">週間來客</div><div class="data-value">${metrics.visits}<small style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</small></div></div>
+            <div><div class="data-label" style="color:var(--green);">當週成交</div><div class="data-value" style="color:var(--green);"><b>${metrics.deals}</b><small style="font-size:11px; margin-left:2px;">組</small></div></div>
+            <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:700;">${metrics.accSales} <span style="font-size:12px; font-weight:400; color:var(--text-muted);">/ ${metrics.totalUnits}戶</span></div></div>
           </div>
 
           <!-- 填報按鈕 -->
@@ -554,12 +633,12 @@ class TtadApp {
             <button class="btn btn-primary" onclick="app.openDataModal('${p.id}', '${p.company}-${p.name}')">填報數據</button>
           </div>
 
-          <!-- 下方四格填報反饋與媒體（含智慧週次繼承顯示） -->
+          <!-- 下方四格填報資訊（含上週自動繼承顯示） -->
           <div class="reports-summary-grid">
             <div class="report-box">
               <div class="report-box-title">📈 去化進度</div>
-              <div class="report-box-content" style="font-size:14px; font-weight:700; color: var(--apple-blue);">
-                ${metrics.progress}% <span style="font-size:11px; font-weight:400; color:var(--text-muted); margin-left:4px;">(累售 ${metrics.accSales} 戶 ｜ 總戶 ${metrics.totalUnits} 戶)</span>
+              <div class="report-box-content" style="font-size:15px; font-weight:700; color:var(--apple-blue);">
+                ${metrics.progress}% <span style="font-size:10px; font-weight:400; color:var(--text-muted); display:block;">(累售 ${metrics.accSales} 戶 / 總戶 ${metrics.totalUnits} 戶)</span>
               </div>
             </div>
             <div class="report-box">
@@ -649,7 +728,7 @@ class TtadApp {
   }
 
   addPersonnel() {
-    const name = document.getElementById('m-staff-name').value.trim();
+    const name = sanitizeName(document.getElementById('m-staff-name').value.trim());
     const email = document.getElementById('m-staff-email').value.trim().toLowerCase();
     const dept = document.getElementById('m-staff-dept').value;
     const year = parseInt(document.getElementById('m-staff-join-year').value);
@@ -750,8 +829,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function handlePasscodeLogin() {
-  const name = document.getElementById('apple-user-fullname').value.trim();
-  const mail = document.getElementById('apple-user-email').value.trim();
+  const name = sanitizeName(document.getElementById('apple-user-fullname').value.trim());
+  const mail = document.getElementById('apple-user-email').value.trim().toLowerCase();
   const year = document.getElementById('apple-user-tenure-year').value;
   const month = document.getElementById('apple-user-tenure-month').value;
   const dept = document.querySelector('input[name="dept-select"]:checked').value;
@@ -764,7 +843,7 @@ function handlePasscodeLogin() {
   localStorage.setItem('ttad_year', year);
   localStorage.setItem('ttad_month', month);
 
-  // 自動將登入者同步進 STAFF_DATABASE 字典
+  // 自動同步新填寫人
   if (!STAFF_DATABASE[mail]) {
     STAFF_DATABASE[mail] = { name, joinYear: parseInt(year), joinMonth: parseInt(month), dept };
     saveStaffDatabase();
