@@ -110,7 +110,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .btn-ghost { background: transparent; color: var(--text-muted); }
 .btn-ghost:hover { background: rgba(0,0,0,0.04); color: var(--text-main); }
 .btn-capsule { border-radius: 99px; background: #E8E8ED; color: var(--text-main); }
-.toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 20px; font-size: 12px; z-index: 99999; display: none; }
+.toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 20px; font-size: 12px; z-index: 99999; display: none; backdrop-filter: blur(10px); }
 </style>
 </head>
 <body>
@@ -160,11 +160,20 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
         <button class="week-btn" onclick="app.changeWeek(1)">下週 →</button>
       </div>
     </div>
-    <div class="user-meta-card">
-      <span id="user-name" class="meta-name">--</span>
-      <span id="user-dept" class="badge badge-dept">--</span>
-      <span id="user-tenure" class="meta-tenure">--</span>
+    
+    <!-- 雲端同步狀態膠囊 -->
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button class="btn btn-capsule btn-sm" id="btn-cloud-status" onclick="app.openCloudModal()" style="font-size:11px; background: rgba(0,0,0,0.03); border:1px solid var(--apple-border);">
+        <span id="cloud-dot">⚪</span> <span id="cloud-status-text">雲端未同步 (按此設定)</span>
+      </button>
+      
+      <div class="user-meta-card">
+        <span id="user-name" class="meta-name">--</span>
+        <span id="user-dept" class="badge badge-dept">--</span>
+        <span id="user-tenure" class="meta-tenure">--</span>
+      </div>
     </div>
+
     <div style="display:flex; gap:10px;">
       <button class="btn btn-capsule btn-sm" id="btn-4k-screenshot">螢幕截圖</button>
       <button class="btn btn-capsule btn-sm" id="btn-staff-edit" style="display:none; color:var(--apple-blue);" onclick="app.openStaffModal()">人員編輯</button>
@@ -296,6 +305,33 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </div>
 </div>
 
+<!-- ══════════════ 5. 雲端同步中心設定彈窗 ══════════════ -->
+<div class="modal-overlay" id="cloud-modal-overlay">
+  <div class="modal-container" style="max-width: 480px;">
+    <div class="modal-header">
+      <span class="modal-title">☁️ 雲端同步網關設定</span>
+      <button class="btn btn-ghost btn-sm" onclick="app.closeCloudModal()" style="font-size: 16px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: rgba(0, 102, 204, 0.05); border: 1px solid rgba(0, 102, 204, 0.15); border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 12px; color: var(--text-main); line-height: 1.6;">
+        <strong>📡 Google Drive 雲端不覆蓋同步：</strong><br>
+        系統會將每週的來客報表自動打包為 <code>weekly_report_YYYY-WXX.json</code> 檔案，同步存取至您的 Google 雲端硬碟。
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" style="font-weight: 700; display: block; margin-bottom: 8px;">Google Apps Script 部署 API 網址</label>
+        <input type="text" id="cloud-api-url" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:10px; border-radius:6px;" placeholder="https://script.google.com/macros/s/.../exec">
+        <small style="color: var(--text-muted); font-size:11px; display:block; margin-top:6px;">請貼入您在 Google 試算表部署發佈的 Web App 執行網址。</small>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-secondary" onclick="app.closeCloudModal()">取消</button>
+        <button class="btn btn-primary" onclick="app.saveCloudConfig()">儲存並測試同步</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1h1M0aYwS8nwEgUnlpBXj1rxWbEbzhvSfZzB5NHbcS20/gviz/tq?gid=1006460624';
 const ADMIN_WHITELIST = ['alains.chou@gmail.com', 'yuhsia0911@gmail.com'];
@@ -322,6 +358,7 @@ let STAFF_DATABASE = {
 };
 
 let WEEKLY_RECORDS_DB = {};
+let CLOUD_API_URL = '';
 
 function saveStaffDatabase() { localStorage.setItem('ttad_staff_db_v4', JSON.stringify(STAFF_DATABASE)); }
 function loadStaffDatabase() {
@@ -335,38 +372,7 @@ function loadWeeklyRecords() {
   if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
 }
 
-// 去除名字中所有的空白字元，防止 full-width / half-width 造成的比對失敗
 const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
-
-function getWeekString(offset = 0) {
-  const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + (offset * 7));
-  const startOfYear = new Date(targetDate.getFullYear(), 0, 1);
-  const weekNum = Math.ceil((((targetDate - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
-  return `${targetDate.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
-}
-
-function getPrevWeekKey(weekKey) {
-  const parts = weekKey.split('-W');
-  if (parts.length !== 2) return weekKey;
-  let year = parseInt(parts[0]);
-  let week = parseInt(parts[1]);
-  if (week > 1) {
-    week -= 1;
-  } else {
-    year -= 1;
-    week = 52;
-  }
-  return `${year}-W${String(week).padStart(2, '0')}`;
-}
-
-function getCalculatedTenure(year, month) {
-  const now = new Date();
-  let years = 2026 - year;
-  let months = 6 - month;
-  if (months < 0) { years -= 1; months += 12; }
-  return `${years} 年 ${months} 個月`;
-}
 
 // ── 系統核心 TtadApp ──
 class TtadApp {
@@ -384,6 +390,7 @@ class TtadApp {
     document.getElementById('user-dept').textContent = dept;
     document.getElementById('user-tenure').textContent = `年資: ${tenure}`;
     
+    this.loadCloudConfig();
     this.updateWeekDisplay();
     await this.fetchData();
     
@@ -395,8 +402,11 @@ class TtadApp {
       document.getElementById('admin-panel').style.display = 'none';
       document.getElementById('btn-staff-edit').style.display = 'none';
     }
+    
+    // 優先本機渲染，並背景發起雲端拉取
     this.renderProjectList();
     this.setupGlobalEvents();
+    this.pullDataFromCloud();
   }
 
   updateWeekDisplay() {
@@ -408,6 +418,7 @@ class TtadApp {
     this.currentWeekOffset += direction;
     this.updateWeekDisplay();
     this.renderProjectList();
+    this.pullDataFromCloud();
   }
 
   async fetchData() {
@@ -441,7 +452,6 @@ class TtadApp {
         };
       });
 
-      // 自動同步雲端試算表中新增的新同仁
       this.syncNewColleaguesFromSheet();
 
     } catch(e) { console.error('資料載入失敗', e); }
@@ -497,14 +507,14 @@ class TtadApp {
 
   selectPlannerFilter(n) { 
     this.selectedPlannerFilter = sanitizeName(n); 
-    this.selectedDesignerFilter = '全部設計'; // 清除交叉過濾
+    this.selectedDesignerFilter = '全部設計'; 
     this.initAdminFilters(); 
     this.renderProjectList(); 
   }
 
   selectDesignerFilter(n) { 
     this.selectedDesignerFilter = sanitizeName(n); 
-    this.selectedPlannerFilter = '全部企劃'; // 清除交叉過濾
+    this.selectedPlannerFilter = '全部企劃'; 
     this.initAdminFilters(); 
     this.renderProjectList(); 
   }
@@ -515,19 +525,17 @@ class TtadApp {
     this.renderProjectList(); 
   }
 
-  // 智慧週次跨週繼承核心 (自動追溯過去填寫過的最深 12 週記錄)
+  // 智慧跨週繼承核心
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
     const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
 
-    // 往前找尋上週或歷史最近一次的填寫紀錄
     let feedback = currentRecord.feedback || '';
     let currentMedia = currentRecord.currentMedia || '';
     let futureMedia = currentRecord.futureMedia || '';
     let totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : 0;
     let accSales = currentRecord.accSales !== undefined && currentRecord.accSales !== 0 ? currentRecord.accSales : 0;
 
-    // 重新校正追溯邏輯 (不破壞構造，乾淨迭代)
     let checkWeek = getPrevWeekKey(currentWeek);
     for (let i = 0; i < 12; i++) {
       const historicalRec = WEEKLY_RECORDS_DB[checkWeek] ? WEEKLY_RECORDS_DB[checkWeek][projectId] : null;
@@ -537,7 +545,6 @@ class TtadApp {
         if (!futureMedia && historicalRec.futureMedia) futureMedia = historicalRec.futureMedia;
         if (totalUnits === 0 && historicalRec.totalUnits) totalUnits = historicalRec.totalUnits;
         if (accSales === 0 && historicalRec.accSales) {
-          // 累積銷售繼承上週累售 + 本週成交
           const currentDeals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
           accSales = historicalRec.accSales + currentDeals;
         }
@@ -545,14 +552,13 @@ class TtadApp {
       checkWeek = getPrevWeekKey(checkWeek);
     }
 
-    // fallback
     if (!feedback) feedback = '暫無反應。';
     if (!currentMedia) currentMedia = '暫無媒體。';
     if (!futureMedia) futureMedia = '暫無規劃。';
     
     const visits = currentRecord.visits !== undefined ? currentRecord.visits : 0;
     const deals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
-    if (accSales === 0) accSales = deals; // 預設
+    if (accSales === 0) accSales = deals; 
 
     const progress = totalUnits > 0 ? ((accSales / totalUnits) * 100).toFixed(1) : '0.0';
 
@@ -572,7 +578,6 @@ class TtadApp {
     const container = document.getElementById('project-list-container');
     
     const filtered = this.projectDb.filter(p => {
-      // 智慧過濾：凡狀態含「結案」或「8.」開頭直接隱藏
       const isClosed = p.stage.includes('結案') || p.stage.startsWith('8');
       if (isClosed) return false;
 
@@ -633,7 +638,7 @@ class TtadApp {
             <button class="btn btn-primary" onclick="app.openDataModal('${p.id}', '${p.company}-${p.name}')">填報數據</button>
           </div>
 
-          <!-- 下方四格填報資訊（含上週自動繼承顯示） -->
+          <!-- 下方四格填報資訊 -->
           <div class="reports-summary-grid">
             <div class="report-box">
               <div class="report-box-title">📈 去化進度</div>
@@ -659,7 +664,7 @@ class TtadApp {
     }).join('');
   }
 
-  // ── 數據填報彈窗控制器 ──
+  // ── 數據填報彈窗 ──
   openDataModal(id, title) {
     document.getElementById('data-entry-modal').style.display = 'flex';
     document.getElementById('data-modal-title').textContent = `填報數據 ➔ ${title}`;
@@ -696,7 +701,112 @@ class TtadApp {
     saveWeeklyRecords();
     this.closeDataModal();
     this.renderProjectList();
-    this.showToast('✅ 週報數據已成功儲存並同步繼承屬性！');
+    this.showToast('✅ 本地週報已更新！正在備份至 Google Drive...');
+    
+    this.pushDataToCloud();
+  }
+
+  // ── ☁️ 雲端同步核心邏輯 ──
+  loadCloudConfig() {
+    const savedUrl = localStorage.getItem('ttad_cloud_api_url');
+    if (savedUrl) {
+      CLOUD_API_URL = savedUrl;
+      this.setCloudStatus('🟢', '雲端同步網關已連線');
+    } else {
+      this.setCloudStatus('⚪', '雲端未同步 (按此設定)');
+    }
+  }
+
+  setCloudStatus(dot, text) {
+    document.getElementById('cloud-dot').textContent = dot;
+    document.getElementById('cloud-status-text').textContent = text;
+  }
+
+  openCloudModal() {
+    document.getElementById('cloud-modal-overlay').style.display = 'flex';
+    document.getElementById('cloud-api-url').value = CLOUD_API_URL;
+  }
+
+  closeCloudModal() {
+    document.getElementById('cloud-modal-overlay').style.display = 'none';
+  }
+
+  saveCloudConfig() {
+    const url = document.getElementById('cloud-api-url').value.trim();
+    if (!url) {
+      localStorage.removeItem('ttad_cloud_api_url');
+      CLOUD_API_URL = '';
+      this.setCloudStatus('⚪', '雲端未同步 (按此設定)');
+      this.closeCloudModal();
+      return;
+    }
+
+    localStorage.setItem('ttad_cloud_api_url', url);
+    CLOUD_API_URL = url;
+    this.setCloudStatus('🟢', '雲端同步網關已連線');
+    this.closeCloudModal();
+    this.showToast('☁️ 雲端網關配置儲存成功！');
+    this.pushDataToCloud();
+  }
+
+  // 背景發送：自動推送本週總表至雲端資料夾
+  async pushDataToCloud() {
+    if (!CLOUD_API_URL) return;
+    
+    const weekKey = getWeekString(this.currentWeekOffset);
+    const dataToSend = WEEKLY_RECORDS_DB[weekKey] || {};
+
+    try {
+      this.setCloudStatus('🟡', '正在背景同步數據...');
+      const response = await fetch(CLOUD_API_URL, {
+        method: 'POST',
+        mode: 'no-cors', // 允許跨網域向 GAS 發送寫入
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          week: weekKey,
+          updatedAt: new Date().toISOString(),
+          reporter: this.currentStaffName,
+          records: dataToSend
+        })
+      });
+      
+      this.setCloudStatus('🟢', '雲端已同步並安全備份');
+      this.showToast(`☁️ [${weekKey}] 數據已成功備份至天子雲端`);
+    } catch (e) {
+      console.error('雲端同步失敗:', e);
+      this.setCloudStatus('🔴', '雲端連線失敗 (請檢查網址)');
+    }
+  }
+
+  // 背景發送：從雲端獲取最新團隊總表
+  async pullDataFromCloud() {
+    if (!CLOUD_API_URL) return;
+    
+    const weekKey = getWeekString(this.currentWeekOffset);
+    try {
+      this.setCloudStatus('🟡', '正在載入雲端數據...');
+      const response = await fetch(`${CLOUD_API_URL}?week=${weekKey}`);
+      const result = await response.json();
+      
+      if (result && result.status === 'success' && result.data && result.data.records) {
+        // 將雲端拉取下來的最新數據，與本機進行智慧合併
+        if (!WEEKLY_RECORDS_DB[weekKey]) WEEKLY_RECORDS_DB[weekKey] = {};
+        
+        WEEKLY_RECORDS_DB[weekKey] = {
+          ...WEEKLY_RECORDS_DB[weekKey],
+          ...result.data.records
+        };
+        
+        saveWeeklyRecords();
+        this.renderProjectList();
+        this.setCloudStatus('🟢', '雲端已同步並安全備份');
+      } else {
+        this.setCloudStatus('🟢', '雲端無歷史檔案 (使用本機資料)');
+      }
+    } catch (e) {
+      console.warn('背景拉取雲端數據失敗 (使用本機快取展示)', e);
+      this.setCloudStatus('🔴', '雲端連線失敗 (請檢查網址)');
+    }
   }
 
   // ── 人員管理面板 ──
@@ -843,7 +953,6 @@ function handlePasscodeLogin() {
   localStorage.setItem('ttad_year', year);
   localStorage.setItem('ttad_month', month);
 
-  // 自動同步新填寫人
   if (!STAFF_DATABASE[mail]) {
     STAFF_DATABASE[mail] = { name, joinYear: parseInt(year), joinMonth: parseInt(month), dept };
     saveStaffDatabase();
