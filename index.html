@@ -358,7 +358,8 @@ let STAFF_DATABASE = {
 };
 
 let WEEKLY_RECORDS_DB = {};
-let CLOUD_API_URL = '';
+// 預先填入您剛剛發佈成功的 Google Apps Script 執行網址
+let CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbzU_g8oE4UQrOK7sz8aeCEibpxf1NLfboDG4CVq61bxcu301q1dYrYH_Pae2S41UIiwcA/exec';
 
 function saveStaffDatabase() { localStorage.setItem('ttad_staff_db_v4', JSON.stringify(STAFF_DATABASE)); }
 function loadStaffDatabase() {
@@ -740,6 +741,12 @@ class TtadApp {
     const savedUrl = localStorage.getItem('ttad_cloud_api_url');
     if (savedUrl) {
       CLOUD_API_URL = savedUrl;
+    } else {
+      // 預設填入您剛剛部署成功的 Google Apps Script 執行網址
+      CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbzU_g8oE4UQrOK7sz8aeCEibpxf1NLfboDG4CVq61bxcu301q1dYrYH_Pae2S41UIiwcA/exec';
+    }
+    
+    if (CLOUD_API_URL) {
       this.setCloudStatus('🟢', '雲端同步網關已連線');
     } else {
       this.setCloudStatus('⚪', '雲端未同步 (按此設定)');
@@ -764,8 +771,8 @@ class TtadApp {
     const url = document.getElementById('cloud-api-url').value.trim();
     if (!url) {
       localStorage.removeItem('ttad_cloud_api_url');
-      CLOUD_API_URL = '';
-      this.setCloudStatus('⚪', '雲端未同步 (按此設定)');
+      CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbzU_g8oE4UQrOK7sz8aeCEibpxf1NLfboDG4CVq61bxcu301q1dYrYH_Pae2S41UIiwcA/exec';
+      this.setCloudStatus('🟢', '已重置為預設同步連線');
       this.closeCloudModal();
       return;
     }
