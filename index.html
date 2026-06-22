@@ -374,6 +374,36 @@ function loadWeeklyRecords() {
 
 const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
 
+function getWeekString(offset = 0) {
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + (offset * 7));
+  const startOfYear = new Date(targetDate.getFullYear(), 0, 1);
+  const weekNum = Math.ceil((((targetDate - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
+  return `${targetDate.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+function getPrevWeekKey(weekKey) {
+  const parts = weekKey.split('-W');
+  if (parts.length !== 2) return weekKey;
+  let year = parseInt(parts[0]);
+  let week = parseInt(parts[1]);
+  if (week > 1) {
+    week -= 1;
+  } else {
+    year -= 1;
+    week = 52;
+  }
+  return `${year}-W${String(week).padStart(2, '0')}`;
+}
+
+function getCalculatedTenure(year, month) {
+  const now = new Date();
+  let years = 2026 - year;
+  let months = 6 - month;
+  if (months < 0) { years -= 1; months += 12; }
+  return `${years} 年 ${months} 個月`;
+}
+
 // ── 系統核心 TtadApp ──
 class TtadApp {
   constructor() {
@@ -403,7 +433,6 @@ class TtadApp {
       document.getElementById('btn-staff-edit').style.display = 'none';
     }
     
-    // 優先本機渲染，並背景發起雲端拉取
     this.renderProjectList();
     this.setupGlobalEvents();
     this.pullDataFromCloud();
@@ -525,7 +554,7 @@ class TtadApp {
     this.renderProjectList(); 
   }
 
-  // 智慧跨週繼承核心
+  // 智慧跨週繼承核心 (自動追溯過去填寫過的最深 12 週記錄)
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
     const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
@@ -758,7 +787,7 @@ class TtadApp {
 
     try {
       this.setCloudStatus('🟡', '正在背景同步數據...');
-      const response = await fetch(CLOUD_API_URL, {
+      await fetch(CLOUD_API_URL, {
         method: 'POST',
         mode: 'no-cors', // 允許跨網域向 GAS 發送寫入
         headers: { 'Content-Type': 'application/json' },
