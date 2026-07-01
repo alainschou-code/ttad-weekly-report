@@ -31,7 +31,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--apple-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.5; }
 
-/* ── STREAMING_CHUNK: Styling UI Components... ── */
 /* ── 登入介面 ── */
 #login-screen { position: fixed; inset: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .apple-login-container { width: 100%; max-width: 360px; text-align: center; padding: 32px 24px; }
@@ -59,7 +58,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
 .badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
 
-/* ── STREAMING_CHUNK: Styling Cards and Grid Layouts... ── */
 /* ── 內容區 ── */
 .app-container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
 .card { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 32px; overflow: hidden; }
@@ -80,7 +78,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 /* 個案卡片 */
 .project-card { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; display: grid; grid-template-columns: 320px 1.1fr 1.2fr; gap: 36px; box-shadow: var(--shadow-sm); transition: transform 0.2s; }
 .pj-company { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
-.pj-name { font-size: 20px; font-weight: 700; margin: 3px 0 8px; color: var(--text-main); }
+.pj-name { font-size: 20px; font-weight: 700; color: var(--text-main); }
 .pj-data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background: #F5F5F7; padding: 20px; border-radius: var(--radius-lg); align-items: center; }
 .data-label { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
 .data-value { font-size: 22px; font-weight: 300; }
@@ -91,13 +89,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .report-box { background: #FAF9F6; border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--radius-md); }
 .report-box-title { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
 .report-box-content { font-size: 12px; color: var(--text-main); word-break: break-all; min-height: 36px; line-height: 1.6; }
-
-/* ── STREAMING_CHUNK: Styling Chat UI and Custom Popups... ── */
-/* AI 對話框樣式 */
-.ai-message { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; animation: bubbleIn 0.2s ease-out; }
-.ai-bubble-user { background: var(--apple-blue); color: white; padding: 10px 14px; border-radius: 14px 14px 2px 14px; align-self: flex-end; max-width: 85%; }
-.ai-bubble-assistant { background: #FFFFFF; border: 1px solid var(--apple-border); color: var(--text-main); padding: 12px 16px; border-radius: 14px 14px 14px 2px; align-self: flex-start; max-width: 95%; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-@keyframes bubbleIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* ── 彈窗 ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(16px); display: none; align-items: center; justify-content: center; z-index: 99999; }
@@ -183,10 +174,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       </div>
     </div>
 
-    <div style="display:flex; gap:10px; align-items: center;">
-      <!-- 主管專屬前台切換按鈕 (唯讀透視視角) -->
-      <button class="btn btn-primary btn-sm" id="btn-view-toggle" style="display:none; background: var(--apple-blue); border-radius: 8px;" onclick="app.toggleManagerView()"></button>
-      
+    <div style="display:flex; gap:10px;">
       <button class="btn btn-capsule btn-sm" id="btn-4k-screenshot">螢幕截圖</button>
       <button class="btn btn-capsule btn-sm" id="btn-staff-edit" style="display:none; color:var(--apple-blue);" onclick="app.openStaffModal()">人員編輯</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="app.logout()">登出</button>
@@ -194,17 +182,17 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </header>
 
   <div class="app-container">
-    <!-- 管理部主控台 (引進 Apple 雙欄黃金比例 Layout ＋ AI 決策工具對話欄位) -->
+    <!-- 管理部主控台 (引進極精緻黃金比例 Layout) -->
     <section id="admin-panel" class="card" style="display: none; border-radius: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--apple-border); background: var(--apple-surface); margin-bottom: 32px; overflow: hidden;">
       <div class="card-header" style="padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); background: rgba(0,0,0,0.01);">
         <div style="display: flex; align-items: center; gap: 12px;">
           <span style="font-size: 24px;">🏢</span>
           <div style="display: flex; flex-direction: column;">
             <span class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-main); letter-spacing: 0.05em; text-transform: none; display: inline-block; margin-bottom: 2px;">管理部決策主控台</span>
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">決策者視野：即時篩選、分析與調配團隊建案數據</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">主管權限：全系統數據透視與人員排班狀態管理</span>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="app.switchToFrontend()" style="background: var(--apple-blue); border-radius: 10px; padding: 10px 20px; font-size: 12px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);">
+        <button class="btn btn-primary" onclick="app.switchToFrontend()" style="background: var(--apple-blue); border-radius: 10px; padding: 10px 20px; font-size: 12px;">
           前往前台視角
         </button>
       </div>
@@ -239,7 +227,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
           </div>
 
           <!-- 對話歷史視窗 -->
-          <div id="ai-chat-history" style="flex: 1; overflow-y: auto; background: #F5F5F7; border: 1px solid var(--apple-border); border-radius: 12px; padding: 16px; margin-bottom: 14px; max-height: 240px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth;">
+          <div id="ai-chat-history" style="flex: 1; overflow-y: auto; background: #F5F5F7; border: 1px solid var(--apple-border); border-radius: 12px; padding: 16px; margin-bottom: 14px; max-height: 240px; display: flex; flex-direction: column; gap: 12px;">
             <div class="ai-message">
               <div class="ai-bubble-assistant">
                 👋 您好！我是您的 <strong>TTAD AI 智慧分析官</strong>。我已成功連結您本週加載的同仁個案與填報數據。<br><br>
@@ -258,7 +246,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
           <!-- 對話輸入欄位 -->
           <div style="display: flex; gap: 8px;">
-            <input type="text" id="ai-chat-input" style="flex: 1; border: 1px solid var(--apple-border); padding: 10px 14px; border-radius: 10px; font-size: 12px; outline: none; transition: border-color 0.2s;" placeholder="問我任何事... 例如：永大Light這週狀況如何？" onkeydown="if(event.key==='Enter') app.sendAiInput()">
+            <input type="text" id="ai-chat-input" style="flex: 1; border: 1px solid var(--apple-border); padding: 10px 14px; border-radius: 10px; font-size: 12px; outline: none;" placeholder="問我任何事... 例如：永大Light這週狀況如何？" onkeydown="if(event.key==='Enter') app.sendAiInput()">
             <button class="btn btn-primary" onclick="app.sendAiInput()" style="border-radius: 10px; padding: 0 16px;">發送</button>
           </div>
         </div>
@@ -343,12 +331,18 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
         <div class="form-group">
           <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">總戶數 (戶)</label>
-          <input type="number" id="entry-total-units" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="0">
+          <input type="number" id="entry-total-units" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="請由人員自行填寫">
         </div>
         <div class="form-group">
           <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">累計銷售 (戶)</label>
           <input type="number" id="entry-acc-sales" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="0">
         </div>
+      </div>
+
+      <!-- 新增總銷金額欄位，允許企劃人員自行填報 -->
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">總銷金額 (例如: 15億 / 12000萬)</label>
+        <input type="text" id="entry-total-sales" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="請輸入本案總銷金額">
       </div>
 
       <div class="form-group" style="margin-bottom:12px;">
@@ -368,7 +362,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
       <div style="display:flex; justify-content:flex-end; gap:10px;">
         <button class="btn btn-secondary" onclick="app.closeDataModal()">取消</button>
-        <button class="btn btn-primary" onclick="app.saveDataEntry()">儲存數據</button>
+        <button class="btn btn-primary" id="btn-save-entry" onclick="app.saveDataEntry()">儲存數據</button>
       </div>
     </div>
   </div>
@@ -493,7 +487,7 @@ function getCalculatedTenure(year, month) {
   return `${years} 年 ${months} 個月`;
 }
 
-// ── 智慧客製化彈窗（完全取代不安全的 alert 與 confirm） ──
+// ── 智慧自訂對話框 ──
 function showAlert(message) {
   const overlay = document.createElement('div');
   overlay.className = "modal-overlay";
@@ -530,7 +524,6 @@ function showConfirm(message, onConfirm) {
   document.getElementById('confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
 }
 
-/* ── STREAMING_CHUNK: Initializing Core TtadApp Logic... ── */
 // ── 系統核心 TtadApp ──
 class TtadApp {
   constructor() {
@@ -538,7 +531,7 @@ class TtadApp {
     this.selectedPlannerFilter = '全部企劃';
     this.selectedDesignerFilter = '全部設計';
     this.currentWeekOffset = 0;
-    this.originalDept = ''; // 儲存主管切換前台前的原始部門
+    this.originalDept = '';
   }
 
   async init(name, dept, tenure) {
@@ -556,7 +549,6 @@ class TtadApp {
     this.updateWeekDisplay();
     await this.fetchData();
     
-    // 初始化主管透視切換按鈕
     this.renderManagerViewToggle();
     
     if (this.currentDept === '管理部') {
@@ -585,27 +577,25 @@ class TtadApp {
     this.pullDataFromCloud();
   }
 
-  /* ── STREAMING_CHUNK: Fetching Data from Google Sheets... ── */
   async fetchData() {
     try {
       const resp = await fetch(GOOGLE_SHEET_URL);
       const text = await resp.text();
       const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
       
-      let totalUnitsColIdx = -1;
+      let totalSalesColIdx = -1;
       let isRow0Header = false;
       let headers = [];
 
-      // 1. 優先檢測 json.table.cols 是否含有真正的標頭名
+      // 1. 檢測標頭
       if (json.table.cols && json.table.cols.some(col => col.label && !/^[A-Z]$/.test(col.label.trim()))) {
         headers = json.table.cols.map(col => col.label ? String(col.label).trim() : '');
       } 
       
-      // 2. 如果 cols 沒有有效標頭，再檢測 rows[0] 是否含有特徵關鍵字 (如: 類別、案名、狀態)
       if (headers.length === 0 && json.table.rows && json.table.rows[0]) {
         const row0Cells = json.table.rows[0].c || [];
         const row0Texts = row0Cells.map(cell => (cell && cell.v !== null) ? String(cell.v).trim() : '');
-        const hasHeaderKeywords = row0Texts.some(txt => txt.includes('類別') || txt.includes('案名') || txt.includes('狀態') || txt.includes('負責') || txt.includes('企劃') || txt.includes('設計'));
+        const hasHeaderKeywords = row0Texts.some(txt => txt.includes('類別') || txt.includes('案名') || txt.includes('狀態') || txt.includes('負責'));
         
         if (hasHeaderKeywords) {
           headers = row0Texts;
@@ -613,18 +603,12 @@ class TtadApp {
         }
       }
 
-      // 3. 在 headers 中智慧搜尋「總戶」、「總戶數」或「戶數」的欄位 index (排除過戶、帳戶、客戶)
+      // 2. 搜尋試算表中的「總銷」或「總銷金額」欄位做預設值對齊
       if (headers.length > 0) {
-        totalUnitsColIdx = headers.findIndex(h => {
+        totalSalesColIdx = headers.findIndex(h => {
           const clean = h.replace(/\s+/g, '');
-          return (clean.includes('總戶') || clean.includes('戶數') || clean === '戶') && 
-                 !clean.includes('客') && !clean.includes('帳') && !clean.includes('過');
+          return clean.includes('總銷') || clean.includes('銷額') || clean.includes('銷售金額');
         });
-      }
-
-      // 4. 備用回退方案：若沒能偵測到 header 則預設第 5 欄 (E欄, index 4)
-      if (totalUnitsColIdx === -1) {
-        totalUnitsColIdx = 4; 
       }
 
       const dataRows = isRow0Header ? json.table.rows.slice(1) : json.table.rows;
@@ -642,14 +626,12 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 智慧總戶數
-        let totalUnits = 0;
-        if (totalUnitsColIdx !== -1) {
-          const rawUnits = getCell(totalUnitsColIdx);
-          totalUnits = parseInt(rawUnits.replace(/[^0-9]/g, '')) || 0;
+        let sheetTotalSalesVal = '';
+        if (totalSalesColIdx !== -1) {
+          sheetTotalSalesVal = getCell(totalSalesColIdx);
         }
 
-        // 🚀 採用永久唯一 Stable ID，防止婉菁在 Google 總表中任意重排/拖曳導致資料遺失！
+        // 採用不重複之複合唯一金鑰，避免婉菁更動排序後對位錯誤
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
@@ -661,7 +643,7 @@ class TtadApp {
           stage: getCell(3), // D欄 狀態
           planner: sanitizeName(getCell(7)), // H欄 負責企劃
           designer: sanitizeName(getCell(8)), // I欄 負責設計
-          totalUnits: totalUnits
+          sheetTotalSales: sheetTotalSalesVal
         };
       });
 
@@ -732,49 +714,27 @@ class TtadApp {
     this.renderProjectList(); 
   }
 
-  // ── 主管前台透視模式切換 (解決主管前往前台一片空白的問題) ──
   renderManagerViewToggle() {
-    const btn = document.getElementById('btn-view-toggle');
+    const btn = document.getElementById('btn-staff-edit');
     if (this.originalDept === '管理部') {
       btn.style.display = 'inline-flex';
-      if (this.currentDept === '管理部') {
-        btn.textContent = '前往前台視角';
-        btn.style.background = 'var(--apple-blue)';
-      } else {
-        btn.textContent = '返回管理主控台';
-        btn.style.background = 'var(--green)';
-      }
-    } else {
-      btn.style.display = 'none';
-    }
-  }
-
-  toggleManagerView() {
-    if (this.currentDept === '管理部') {
-      this.switchToFrontend();
-    } else {
-      this.switchToBackend();
     }
   }
 
   switchToFrontend() { 
-    this.currentDept = '企劃部'; // 暫時切換為企劃視角
+    this.currentDept = '企劃部'; // 暫時切換
     document.getElementById('admin-panel').style.display = 'none'; 
-    this.renderManagerViewToggle();
     this.renderProjectList(); 
-    this.showToast('ℹ️ 已啟用前台全能視野（可檢視全公司專案）');
+    this.showToast('ℹ️ 已切換為前台唯讀透視視角（可檢視全公司專案）');
   }
 
   switchToBackend() {
     this.currentDept = '管理部';
     document.getElementById('admin-panel').style.display = 'block';
-    this.renderManagerViewToggle();
     this.initAdminFilters();
     this.renderProjectList();
-    this.showToast('ℹ️ 已返回管理部決策主控台');
   }
 
-  /* ── STREAMING_CHUNK: Calculating Weekly Inherited Data... ── */
   // 智慧跨週繼承核心 (自動追溯過去填寫過的最深 12 週記錄)
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
@@ -783,15 +743,9 @@ class TtadApp {
     let feedback = currentRecord.feedback || '';
     let currentMedia = currentRecord.currentMedia || '';
     let futureMedia = currentRecord.futureMedia || '';
-    
-    // 智慧取總戶數：Google 總表優先
-    const pj = this.projectDb.find(p => p.id === projectId);
-    let totalUnits = (pj && pj.totalUnits) ? pj.totalUnits : 0;
-    if (totalUnits === 0) {
-      totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : 0;
-    }
-
+    let totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : 0;
     let accSales = currentRecord.accSales !== undefined && currentRecord.accSales !== 0 ? currentRecord.accSales : 0;
+    let totalSales = currentRecord.totalSales || '';
 
     let checkWeek = getPrevWeekKey(currentWeek);
     for (let i = 0; i < 12; i++) {
@@ -805,6 +759,7 @@ class TtadApp {
           const currentDeals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
           accSales = historicalRec.accSales + currentDeals;
         }
+        if (!totalSales && historicalRec.totalSales) totalSales = historicalRec.totalSales;
       }
       checkWeek = getPrevWeekKey(checkWeek);
     }
@@ -827,11 +782,11 @@ class TtadApp {
       feedback,
       currentMedia,
       futureMedia,
-      progress
+      progress,
+      totalSales
     };
   }
 
-  /* ── STREAMING_CHUNK: Rendering Project Cards list... ── */
   renderProjectList() {
     const container = document.getElementById('project-list-container');
     
@@ -839,7 +794,7 @@ class TtadApp {
       const isClosed = p.stage.includes('結案') || p.stage.startsWith('8');
       if (isClosed) return false;
 
-      // 1. 管理部視角
+      // 1. 管理部後台模式
       if (this.currentDept === '管理部') {
         let matchPlanner = true;
         let matchDesigner = true;
@@ -861,30 +816,37 @@ class TtadApp {
         return true; 
       }
       
-      // 2. 主管切換到前台視角：開啟全能視野（顯示全體專案）
+      // 2. 主管切換到前台唯讀透視模式：開啟全能視野（顯示全體進行中專案）
       if (this.originalDept === '管理部' && this.currentDept !== '管理部') {
         return true;
       }
 
-      // 3. 一般企劃/設計同仁：僅顯示本人負責專案
+      // 3. 一般同仁：僅顯示本人負責專案
       return p.planner === this.currentStaffName || p.designer === this.currentStaffName;
     });
 
     if (filtered.length === 0) {
-      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無您負責或符合篩選條件的個案項目</div>';
+      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無負責或符合篩選條件的個案項目</div>';
       return;
     }
 
     container.innerHTML = filtered.map(p => {
       const metrics = this.getProjectInheritedData(p.id);
       const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
+      
+      // 智慧融合：前台手填總銷優於 Google 總表總銷
+      const displaySales = metrics.totalSales || p.sheetTotalSales || '未填';
 
       return `
         <div class="project-card">
           <!-- 左側建案元資訊 -->
           <div>
             <div class="pj-company">${p.company}</div>
-            <div class="pj-name">${p.name}</div>
+            <!-- 總銷金額並列在個案名稱右邊，以最精緻不吃邊的規格呈現 -->
+            <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin:3px 0 8px;">
+              <div class="pj-name" style="margin:0;">${p.name}</div>
+              <span style="font-size:12px; color:var(--text-muted); font-weight:500;">(總銷: ${displaySales})</span>
+            </div>
             <div style="margin-bottom: 12px;">
               <span class="badge-tag" style="background:${categoryColor}; color:white;">${p.category}</span>
               <span style="font-size:11px; color:var(--text-muted)">📍 ${p.location}</span>
@@ -894,9 +856,9 @@ class TtadApp {
 
           <!-- 右側核心數據展示 -->
           <div class="pj-data-grid">
-            <div><div class="data-label">週間來客</div><div class="data-value">${metrics.visits} 組</div></div>
-            <div><div class="data-label" style="color:var(--green);">當週成交</div><div class="data-value" style="color:var(--green); font-weight:600;">${metrics.deals} 組</div></div>
-            <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:600;">${metrics.accSales} / ${metrics.totalUnits} 戶</div></div>
+            <div><div class="data-label">週間來客</div><div class="data-value">${metrics.visits}<small style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</small></div></div>
+            <div><div class="data-label" style="color:var(--green);">當週成交</div><div class="data-value" style="color:var(--green); font-weight:600;">${metrics.deals}<small style="font-size:11px; margin-left:2px;">組</small></div></div>
+            <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:700;">${metrics.accSales} <span style="font-size:12px; font-weight:400; color:var(--text-muted);">/ ${metrics.totalUnits}戶</span></div></div>
           </div>
 
           <!-- 填報按鈕 -->
@@ -938,7 +900,6 @@ class TtadApp {
 
     const metrics = this.getProjectInheritedData(id);
     const pj = this.projectDb.find(p => p.id === id);
-    const masterUnits = (pj && pj.totalUnits) ? pj.totalUnits : 0;
 
     document.getElementById('entry-visits').value = metrics.visits || '';
     document.getElementById('entry-deals').value = metrics.deals || '';
@@ -946,29 +907,27 @@ class TtadApp {
     document.getElementById('entry-feedback').value = metrics.feedback === '暫無反應。' ? '' : metrics.feedback;
     document.getElementById('entry-current-media').value = metrics.currentMedia === '暫無媒體。' ? '' : metrics.currentMedia;
     document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
+    document.getElementById('entry-total-sales').value = metrics.totalSales || pj.sheetTotalSales || '';
 
-    // 🔒 智慧總戶數安全防護：如果 Google 試算表中有總戶數，鎖定該輸入框免去填寫
+    // 🔓 已取消總戶數強行帶入鎖定，將編輯權限完全歸還予同仁自由填寫
     const totalUnitsInput = document.getElementById('entry-total-units');
-    if (masterUnits > 0) {
-      totalUnitsInput.value = masterUnits;
-      totalUnitsInput.readOnly = true;
-      totalUnitsInput.style.background = '#F5F5F7';
-      totalUnitsInput.style.color = '#86868B';
-      totalUnitsInput.style.border = '1px dashed var(--apple-border)';
-      totalUnitsInput.placeholder = '總表自動帶入，免填寫';
-    } else {
-      totalUnitsInput.value = metrics.totalUnits || '';
-      totalUnitsInput.readOnly = false;
-      totalUnitsInput.style.background = '#FFFFFF';
-      totalUnitsInput.style.color = '#1D1D1F';
-      totalUnitsInput.style.border = '1px solid var(--apple-border)';
-      totalUnitsInput.placeholder = '0';
-    }
+    totalUnitsInput.value = metrics.totalUnits || '';
+    totalUnitsInput.readOnly = false;
+    totalUnitsInput.style.background = '#FFFFFF';
+    totalUnitsInput.style.color = '#1D1D1F';
+    totalUnitsInput.style.border = '1px solid var(--apple-border)';
+    totalUnitsInput.placeholder = '請輸入總戶數';
   }
 
   closeDataModal() { document.getElementById('data-entry-modal').style.display = 'none'; }
 
-  saveDataEntry() {
+  // 填報數據存檔：導入 synchronous await 強制即刻儲存並推送雲端，完美排除時間差
+  async saveDataEntry() {
+    const saveBtn = document.getElementById('btn-save-entry');
+    const origText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '⚡ 正在即時存檔至雲端...';
+
     const id = document.getElementById('entry-project-id').value;
     const currentWeek = getWeekString(this.currentWeekOffset);
 
@@ -981,15 +940,26 @@ class TtadApp {
       accSales: parseInt(document.getElementById('entry-acc-sales').value) || 0,
       feedback: document.getElementById('entry-feedback').value.trim(),
       currentMedia: document.getElementById('entry-current-media').value.trim(),
-      futureMedia: document.getElementById('entry-future-media').value.trim()
+      futureMedia: document.getElementById('entry-future-media').value.trim(),
+      totalSales: document.getElementById('entry-total-sales').value.trim()
     };
 
     saveWeeklyRecords();
+    
+    // 即時連線同步至雲端，避免任何資料遺落
+    const cloudSuccess = await this.pushDataToCloud();
+    
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = origText;
+
     this.closeDataModal();
     this.renderProjectList();
-    this.showToast('✅ 本地週報已更新！正在備份至 Google Drive...');
     
-    this.pushDataToCloud();
+    if (cloudSuccess) {
+      this.showToast('✅ 數據已即時同步備份至天子雲端！');
+    } else {
+      this.showToast('⚠️ 本地存檔成功，但雲端網關暫時連線失敗');
+    }
   }
 
   // ── ☁️ 雲端同步核心邏輯 ──
@@ -1040,9 +1010,9 @@ class TtadApp {
     this.pushDataToCloud();
   }
 
-  // 背景發送：自動推送本週總表至雲端資料夾
+  // 背景發送：自動推送本週總表至雲端資料夾 (無感傳輸相容模式)
   async pushDataToCloud() {
-    if (!CLOUD_API_URL) return;
+    if (!CLOUD_API_URL) return false;
     
     const weekKey = getWeekString(this.currentWeekOffset);
     const dataToSend = WEEKLY_RECORDS_DB[weekKey] || {};
@@ -1051,7 +1021,7 @@ class TtadApp {
       this.setCloudStatus('🟡', '正在背景同步數據...');
       await fetch(CLOUD_API_URL, {
         method: 'POST',
-        mode: 'no-cors', 
+        mode: 'no-cors', // 允許跨網域寫入
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           week: weekKey,
@@ -1062,10 +1032,11 @@ class TtadApp {
       });
       
       this.setCloudStatus('🟢', '雲端已同步並安全備份');
-      this.showToast(`☁️ [${weekKey}] 數據已成功備份至天子雲端`);
+      return true;
     } catch (e) {
       console.error('雲端同步失敗:', e);
-      this.setCloudStatus('🔴', '雲端連線失敗 (請檢查網址)');
+      this.setCloudStatus('🔴', '雲端連線失敗');
+      return false;
     }
   }
 
@@ -1099,7 +1070,6 @@ class TtadApp {
     }
   }
 
-  /* ── STREAMING_CHUNK: Setting up Local AI Core Engine... ── */
   // ── 🧠 TTAD AI 本地智慧數據分析引擎核心 ──
   askAi(tag) {
     this.appendAiMessage(tag, 'user');
@@ -1176,7 +1146,6 @@ class TtadApp {
         }
       }
 
-      // 篩選去化進度落後且處於銷售中的案場
       if (progress < 30.0 && p.stage.indexOf('銷售中') !== -1) {
         warningProjects.push({ name: p.name, progress, visits, deals, planner: p.planner });
       }
@@ -1248,7 +1217,6 @@ class TtadApp {
       `;
     }
 
-    // 自由搜尋問答
     let foundProject = null;
     this.projectDb.forEach(p => {
       if (tag.toLowerCase().includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(tag.toLowerCase())) {
@@ -1362,7 +1330,6 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── 4K 無損螢幕截圖導出模組 (跨域無感滾動相容優化) ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
