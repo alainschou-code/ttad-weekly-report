@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TTAD GROUP 天子創意來客週報表</title>
 
-<!-- 外部核心 SDK -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
@@ -175,6 +174,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
     </div>
 
     <div style="display:flex; gap:10px;">
+      <button class="btn btn-capsule btn-sm" id="btn-back-to-admin" style="display:none; background: var(--apple-blue); color: white;" onclick="app.switchToBackend()">返回管理主控台</button>
       <button class="btn btn-capsule btn-sm" id="btn-4k-screenshot">螢幕截圖</button>
       <button class="btn btn-capsule btn-sm" id="btn-staff-edit" style="display:none; color:var(--apple-blue);" onclick="app.openStaffModal()">人員編輯</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="app.logout()">登出</button>
@@ -708,6 +708,10 @@ class TtadApp {
   switchToFrontend() { 
     this.currentDept = '企劃部'; // 暫時切換
     document.getElementById('admin-panel').style.display = 'none'; 
+    const backBtn = document.getElementById('btn-back-to-admin');
+    if (backBtn) {
+      backBtn.style.display = 'inline-flex';
+    }
     this.renderProjectList(); 
     this.showToast('ℹ️ 已切換為前台唯讀透視視角（可檢視全公司專案）');
   }
@@ -715,6 +719,10 @@ class TtadApp {
   switchToBackend() {
     this.currentDept = '管理部';
     document.getElementById('admin-panel').style.display = 'block';
+    const backBtn = document.getElementById('btn-back-to-admin');
+    if (backBtn) {
+      backBtn.style.display = 'none';
+    }
     this.initAdminFilters();
     this.renderProjectList();
   }
@@ -820,7 +828,7 @@ class TtadApp {
       
       return `
         <div class="project-card">
-          <!-- 左側建案元資訊 (已完全取消 總銷金額 的顯示) -->
+          <!-- 左側建案元資訊 -->
           <div>
             <div class="pj-company">${p.company}</div>
             <div class="pj-name">${p.name}</div>
@@ -1318,11 +1326,48 @@ class TtadApp {
         this.showToast('📸 正在啟用 4K 高解析度無損渲染，請稍候...');
         const element = document.getElementById('project-list-container');
         
-        // 暫時滾動至頂部對齊，防止渲染出現白邊
+        // 1. 智慧動態 Header 注入技術：在背景建立帶有完整個人與日期資訊的報告頭部卡片
+        const headerDiv = document.createElement('div');
+        headerDiv.id = 'dynamic-screenshot-header';
+        headerDiv.style.cssText = `
+          background: #FFFFFF;
+          border: 1px solid var(--apple-border);
+          border-radius: var(--radius-lg);
+          padding: 28px 36px;
+          margin-bottom: 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          box-shadow: var(--shadow-sm);
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+        `;
+        
+        const dateRange = getWeekDateRange(this.currentWeekOffset);
+        const joinYear = localStorage.getItem('ttad_year') || '--';
+        const joinMonth = localStorage.getItem('ttad_month') || '--';
+        const tenureText = document.getElementById('user-tenure').textContent;
+        const printDept = this.originalDept || this.currentDept;
+
+        headerDiv.innerHTML = `
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: var(--apple-blue); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 6px;">TTAD GROUP 天子創意 ｜ 數位來客數據週報</div>
+            <div style="font-size: 24px; font-weight: 800; color: #1D1D1F; letter-spacing: -0.02em;">${dateRange}</div>
+          </div>
+          <div style="text-align: right; font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+            <div>填報同仁：<strong style="color: #1D1D1F; font-size: 14px;">${this.currentStaffName}</strong> (${printDept})</div>
+            <div>到職時間：<strong>${joinYear} 年 ${joinMonth} 月</strong> ｜ ${tenureText}</div>
+          </div>
+        `;
+
+        // 插入到週報最頂部進行渲染
+        element.insertBefore(headerDiv, element.firstChild);
+
+        // 暫時滾動至頂部對齊，防止 html2canvas 出現黑邊
         const origScrollTop = window.scrollY;
         window.scrollTo(0, 0);
 
         try {
+          // 調用 html2canvas 2.5x 渲染，確保 4K 無損畫質
           html2canvas(element, {
             scale: 2.5, 
             useCORS: true,
@@ -1330,7 +1375,10 @@ class TtadApp {
             logging: false,
             backgroundColor: '#F5F5F7'
           }).then(canvas => {
+            // 復原原本滾動位置
             window.scrollTo(0, origScrollTop); 
+            // 立即拆除背景資訊 Header，保持頁面乾淨
+            headerDiv.remove();
 
             const link = document.createElement('a');
             const weekKey = getWeekString(this.currentWeekOffset);
@@ -1341,11 +1389,13 @@ class TtadApp {
           }).catch(err => {
             console.error('html2canvas 渲染發生異常:', err);
             window.scrollTo(0, origScrollTop);
+            headerDiv.remove();
             this.showToast('❌ 圖片繪製失敗，請重試！');
           });
         } catch (e) {
           console.error('螢幕截圖初始化失敗:', e);
           window.scrollTo(0, origScrollTop);
+          headerDiv.remove();
           this.showToast('❌ 截圖發生異常，請重試！');
         }
       };
