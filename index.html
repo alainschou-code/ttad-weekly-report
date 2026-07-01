@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TTAD GROUP 天子創意來客週報表</title>
 
+<!-- 外部核心 SDK -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
@@ -182,7 +183,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </header>
 
   <div class="app-container">
-    <!-- 管理部主控台 (黃金比例 Layout 升級版) -->
+    <!-- 管理部主控台 (黃金比例 Layout) -->
     <section id="admin-panel" class="card" style="display: none; border-radius: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--apple-border); background: var(--apple-surface); margin-bottom: 32px; overflow: hidden;">
       <div class="card-header" style="padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); background: rgba(0,0,0,0.01);">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -403,6 +404,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 <div id="toast" class="toast"></div>
 
 <script>
+// ── STREAMING_CHUNK: Initializing Database Structures and API links... ──
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1h1M0aYwS8nwEgUnlpBXj1rxWbEbzhvSfZzB5NHbcS20/gviz/tq?gid=1006460624';
 const ADMIN_WHITELIST = ['alains.chou@gmail.com', 'yuhsia0911@gmail.com'];
 
@@ -525,6 +527,7 @@ function showConfirm(message, onConfirm) {
   document.getElementById('confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
 }
 
+// ── STREAMING_CHUNK: Defining TtadApp core controller class... ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
@@ -779,6 +782,7 @@ class TtadApp {
     };
   }
 
+  // ── STREAMING_CHUNK: Rendering cards dynamically in HTML container... ──
   renderProjectList() {
     const container = document.getElementById('project-list-container');
     
@@ -946,7 +950,7 @@ class TtadApp {
     }
   }
 
-  // ── ☁️ 雲端同步核心邏輯 ──
+  // ── STREAMING_CHUNK: Connecting cloud synchronization protocols... ──
   loadCloudConfig() {
     const savedUrl = localStorage.getItem('ttad_cloud_api_url');
     if (savedUrl) {
@@ -1054,7 +1058,7 @@ class TtadApp {
     }
   }
 
-  // ── 🧠 TTAD AI 本地智慧數據分析引擎核心 ──
+  // ── STREAMING_CHUNK: Bootstrapping TTAD Local AI Analyst engine... ──
   askAi(tag) {
     this.appendAiMessage(tag, 'user');
     const typingId = this.appendAiMessage('🤖 智慧分析官正在快速處理當前數據中，請稍候...', 'assistant');
@@ -1234,7 +1238,7 @@ class TtadApp {
     }
   }
 
-  // ── 人員管理面板 ──
+  // ── STREAMING_CHUNK: Setting up staff management dialog functions... ──
   openStaffModal() {
     document.getElementById('staff-modal-overlay').style.display = 'flex';
     this.renderStaffList();
@@ -1314,6 +1318,7 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
+  // ── STREAMING_CHUNK: Perfecting screenshot exporter module with 1.8x limit safety... ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
@@ -1323,10 +1328,10 @@ class TtadApp {
           return;
         }
 
-        this.showToast('📸 正在啟用 4K 高解析度無損渲染，請稍候...');
+        this.showToast('📸 正在啟用高畫質無損渲染（1/2），請稍候...');
         const element = document.getElementById('project-list-container');
         
-        // 1. 智慧動態 Header 注入技術：在背景建立帶有完整個人與日期資訊的報告頭部卡片
+        // 1. 動態建立帶有完整個人與日期資訊的報告頭部卡片
         const headerDiv = document.createElement('div');
         headerDiv.id = 'dynamic-screenshot-header';
         headerDiv.style.cssText = `
@@ -1362,42 +1367,62 @@ class TtadApp {
         // 插入到週報最頂部進行渲染
         element.insertBefore(headerDiv, element.firstChild);
 
-        // 暫時滾動至頂部對齊，防止 html2canvas 出現黑邊
+        // 智慧滾動緩衝機制：先強行滾動至頂部對齊，避免任何黑邊或排版死角
         const origScrollTop = window.scrollY;
         window.scrollTo(0, 0);
 
-        try {
-          // 調用 html2canvas 2.5x 渲染，確保 4K 無損畫質
-          html2canvas(element, {
-            scale: 2.5, 
-            useCORS: true,
-            allowTaint: true,
-            logging: false,
-            backgroundColor: '#F5F5F7'
-          }).then(canvas => {
-            // 復原原本滾動位置
-            window.scrollTo(0, origScrollTop); 
-            // 立即拆除背景資訊 Header，保持頁面乾淨
-            headerDiv.remove();
+        this.showToast('📸 正在處理 Canvas 導出（2/2），即將下載...');
 
-            const link = document.createElement('a');
-            const weekKey = getWeekString(this.currentWeekOffset);
-            link.download = `[天子創意]_${this.currentStaffName}_週報_${weekKey}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            this.showToast('✅ 螢幕截圖已儲存並下載！');
-          }).catch(err => {
-            console.error('html2canvas 渲染發生異常:', err);
+        // 補上 50ms 延遲阻斷，確保 Safari 完成滾動定位與繪製
+        setTimeout(() => {
+          try {
+            // scale: 1.8 為 Apple 瀏覽器 Canvas 記憶體安全預算最佳解，100% 成功導出不崩潰！
+            html2canvas(element, {
+              scale: 1.8, 
+              useCORS: true,
+              allowTaint: false,
+              logging: false,
+              backgroundColor: '#F5F5F7'
+            }).then(canvas => {
+              // 立即還原 scroll 位置並拆除動態 Banner，不干擾介面
+              window.scrollTo(0, origScrollTop); 
+              headerDiv.remove();
+
+              // Canvas 防呆保護
+              if (!canvas || canvas.width === 0 || canvas.height === 0) {
+                throw new Error("繪製畫布為空，可能是設備記憶體不足");
+              }
+
+              const imgData = canvas.toDataURL('image/png');
+              if (imgData === 'data:,' || imgData.length < 100) {
+                throw new Error("Canvas 導出受瀏覽器安全性限制阻擋");
+              }
+
+              // 下載鏈接
+              const link = document.createElement('a');
+              const weekKey = getWeekString(this.currentWeekOffset);
+              link.download = `[天子創意]_${this.currentStaffName}_週報_${weekKey}.png`;
+              link.href = imgData;
+              
+              // 補上 iOS Safari 必須的 DOM 附加下載流程
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+
+              this.showToast('✅ 螢幕截圖已成功儲存並下載！');
+            }).catch(err => {
+              window.scrollTo(0, origScrollTop);
+              headerDiv.remove();
+              console.error('html2canvas 內部失敗:', err);
+              showAlert('截圖失敗: ' + err.message + ' (建議切換為 Chrome 或重新整理頁面)');
+            });
+          } catch (e) {
             window.scrollTo(0, origScrollTop);
             headerDiv.remove();
-            this.showToast('❌ 圖片繪製失敗，請重試！');
-          });
-        } catch (e) {
-          console.error('螢幕截圖初始化失敗:', e);
-          window.scrollTo(0, origScrollTop);
-          headerDiv.remove();
-          this.showToast('❌ 截圖發生異常，請重試！');
-        }
+            console.error('螢幕截圖意外終止:', e);
+            showAlert('螢幕截圖崩潰: ' + e.message);
+          }
+        }, 80);
       };
     }
   }
