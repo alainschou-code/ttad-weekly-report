@@ -174,7 +174,11 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       </div>
     </div>
 
-    <div style="display:flex; gap:10px;">
+    <!-- 頂部高階功能控制組 -->
+    <div style="display:flex; gap:10px; align-items: center;">
+      <!-- 主管前后台切換按鈕 (僅在原本是管理部主管時動態顯示) -->
+      <button class="btn btn-primary btn-sm" id="btn-view-toggle" style="display:none; background: var(--apple-blue); border-radius: 8px; padding: 8px 14px;" onclick="app.toggleManagerView()"></button>
+      
       <button class="btn btn-capsule btn-sm" id="btn-4k-screenshot">螢幕截圖</button>
       <button class="btn btn-capsule btn-sm" id="btn-staff-edit" style="display:none; color:var(--apple-blue);" onclick="app.openStaffModal()">人員編輯</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="app.logout()">登出</button>
@@ -395,7 +399,6 @@ function loadWeeklyRecords() {
 
 const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
 
-// ── ⏳ 智慧週別日期演算模組 ──
 function getWeekString(offset = 0) {
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + (offset * 7));
@@ -444,7 +447,6 @@ function getCalculatedTenure(year, month) {
   return `${years} 年 ${months} 個月`;
 }
 
-// ── 🔒 安全設計：自訂 Apple 風格彈窗 ──
 function showConfirm(message, onConfirm) {
   const overlay = document.createElement('div');
   overlay.style = "position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999999;";
@@ -480,18 +482,22 @@ function showAlert(message) {
   document.getElementById('alert-ok').onclick = () => overlay.remove();
 }
 
-// ── 🚀 系統主程式 ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
     this.selectedPlannerFilter = '全部企劃';
     this.selectedDesignerFilter = '全部設計';
     this.currentWeekOffset = 0;
+    this.originalDept = ''; // 紀錄登入時的原始部門
   }
 
   async init(name, dept, tenure) {
     this.currentStaffName = sanitizeName(name);
     this.currentDept = dept;
+    if (!this.originalDept) {
+      this.originalDept = dept; // 初始化儲存主管原始身份
+    }
+    
     document.getElementById('user-name').textContent = name;
     document.getElementById('user-dept').textContent = dept;
     document.getElementById('user-tenure').textContent = `年資: ${tenure}`;
@@ -500,7 +506,10 @@ class TtadApp {
     this.updateWeekDisplay();
     await this.fetchData();
     
-    if (dept === '管理部') {
+    // 初始化前后台快速導覽切換按鈕
+    this.renderManagerViewToggle();
+    
+    if (this.currentDept === '管理部') {
       document.getElementById('admin-panel').style.display = 'block';
       document.getElementById('btn-staff-edit').style.display = 'inline-flex';
       this.initAdminFilters();
@@ -515,7 +524,7 @@ class TtadApp {
   }
 
   updateWeekDisplay() {
-    // 同時顯示週數與實際日期區間
+    // 智慧日期導覽：週別主鍵 + 實際日期範圍
     const label = getWeekDateRange(this.currentWeekOffset);
     document.getElementById('current-week-display').textContent = `報表週別: ${label}`;
   }
@@ -546,18 +555,18 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 🚀 採用「案名_地址」作為絕對不重複且不因排序錯位的 Unique Stable ID 
+        // 🚀 採用唯一不重複的組合識別碼 (Stable ID)，修補排序錯位問題
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
-          id: stableId, // 統一以前後台一致的 Stable ID 來進行資料綁定，完全修復「填寫不更新」之錯配問題！
+          id: stableId, 
           category: getCell(0), // A欄 類別
           location: getCell(1), // B欄 區域地址
           company: company,
           name: prjName,
           stage: getCell(3), // D欄 狀態
           planner: sanitizeName(getCell(7)), // H欄 負責企劃 
-          designer: sanitizeName(getCell(8)) // I欄 負責設計
+          designer: sanitizeName(getCell(8)) // I欄 負責設計 
         };
       });
 
@@ -628,10 +637,47 @@ class TtadApp {
     this.renderProjectList(); 
   }
 
+  // 渲染主管前后台切換按鈕
+  renderManagerViewToggle() {
+    const btn = document.getElementById('btn-view-toggle');
+    if (this.originalDept === '管理部') {
+      btn.style.display = 'inline-flex';
+      if (this.currentDept === '管理部') {
+        btn.textContent = '前往前台視角';
+        btn.style.background = 'var(--apple-blue)';
+      } else {
+        btn.textContent = '返回管理主控台';
+        btn.style.background = 'var(--green)';
+      }
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
+  // 主管專屬前后台視角快速切換
+  toggleManagerView() {
+    if (this.currentDept === '管理部') {
+      this.switchToFrontend();
+    } else {
+      this.switchToBackend();
+    }
+  }
+
   switchToFrontend() { 
     this.currentDept = '企劃部'; 
-    document.getElementById('admin-panel').style.display='none'; 
+    document.getElementById('admin-panel').style.display = 'none'; 
+    this.renderManagerViewToggle();
     this.renderProjectList(); 
+    this.showToast('ℹ️ 已切換為前台全能視野（可檢視所有專案）');
+  }
+
+  switchToBackend() {
+    this.currentDept = '管理部';
+    document.getElementById('admin-panel').style.display = 'block';
+    this.renderManagerViewToggle();
+    this.initAdminFilters();
+    this.renderProjectList();
+    this.showToast('ℹ️ 已返回管理部決策主控台');
   }
 
   getProjectInheritedData(projectId) {
@@ -689,6 +735,7 @@ class TtadApp {
       const isClosed = p.stage.includes('結案') || p.stage.startsWith('8');
       if (isClosed) return false;
 
+      // 1. 如果是管理部，進行主控台交叉篩選
       if (this.currentDept === '管理部') {
         let matchPlanner = true;
         let matchDesigner = true;
@@ -709,11 +756,18 @@ class TtadApp {
         }
         return true; 
       }
+      
+      // 2. 如果是主管切換到前台視角，提供「全能全檢視視野」，直接顯示所有專案
+      if (this.originalDept === '管理部' && this.currentDept !== '管理部') {
+        return true;
+      }
+
+      // 3. 一般企劃/設計部同仁登入：僅顯示本人負責的專案
       return p.planner === this.currentStaffName || p.designer === this.currentStaffName;
     });
 
     if (filtered.length === 0) {
-      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無您負責或符合篩選條件的個案項目</div>';
+      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無負責或符合篩選條件的個案項目</div>';
       return;
     }
 
@@ -808,7 +862,7 @@ class TtadApp {
     saveWeeklyRecords();
     this.closeDataModal();
     this.renderProjectList();
-    this.showToast('✅ 本地週報已更新！正在備份至 Google Drive...');
+    this.showToast('✅ 本地數據已更新！正在自動備份至 Google Drive...');
     
     this.pushDataToCloud();
   }
@@ -917,7 +971,6 @@ class TtadApp {
     }
   }
 
-  // ── 人員管理面板 ──
   openStaffModal() {
     document.getElementById('staff-modal-overlay').style.display = 'flex';
     this.renderStaffList();
@@ -1006,7 +1059,7 @@ class TtadApp {
           return;
         }
 
-        this.showToast('📸 正在啟用高解析度無損渲染，請稍候...');
+        this.showToast('📸 正在啟用 4K 高解析度無損渲染，請稍候...');
         const element = document.getElementById('project-list-container');
         
         // 臨時將捲軸移到最上方，防止 html2canvas 產生白色截斷
@@ -1015,14 +1068,13 @@ class TtadApp {
 
         try {
           html2canvas(element, {
-            scale: 2.5, // 調整至 2.5 倍以優化效能並確保超清晰輸出
+            scale: 2.5, // 2.5 倍以優化效能並確保超清晰輸出
             useCORS: true,
             allowTaint: true,
             logging: false,
             backgroundColor: '#F5F5F7'
           }).then(canvas => {
-            // 還原捲軸高度
-            window.scrollTo(0, origScrollTop);
+            window.scrollTo(0, origScrollTop); // 還原捲軸高度
 
             const link = document.createElement('a');
             const weekKey = getWeekString(this.currentWeekOffset);
@@ -1033,7 +1085,7 @@ class TtadApp {
           }).catch(err => {
             console.error('html2canvas 渲染發生異常:', err);
             window.scrollTo(0, origScrollTop);
-            this.showToast('❌ 圖片繪製失敗，請嘗試使用系統原生截圖功能！');
+            this.showToast('❌ 圖片繪製失敗，請重試！');
           });
         } catch (e) {
           console.error('螢幕截圖初始化失敗:', e);
@@ -1047,7 +1099,6 @@ class TtadApp {
 
 const app = new TtadApp();
 
-// ── 啟動與登入邏輯 ──
 document.addEventListener('DOMContentLoaded', () => {
   loadStaffDatabase();
   loadWeeklyRecords();
