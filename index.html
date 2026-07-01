@@ -183,16 +183,35 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
   <div class="app-container">
     <!-- 管理部主控台 -->
-    <section id="admin-panel" class="card" style="display: none;">
-      <div class="card-header">
-        <span class="card-title">🏢 管理部決策主控台</span>
-        <button class="btn btn-primary btn-sm" onclick="app.switchToFrontend()">前往前台視角</button>
+    <section id="admin-panel" class="card" style="display: none; border-radius: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--apple-border); background: var(--apple-surface); margin-bottom: 32px; overflow: hidden;">
+      <div class="card-header" style="padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); background: rgba(0,0,0,0.01);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 24px;">🏢</span>
+          <div style="display: flex; flex-direction: column;">
+            <span class="card-title" style="font-size: 15px; font-weight: 700; color: var(--text-main); letter-spacing: 0.05em; text-transform: none; display: inline-block; margin-bottom: 2px;">管理部決策主控台</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">決策者視野：即時篩選、分析與調配團隊建案數據</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="app.switchToFrontend()" style="background: var(--apple-blue); border-radius: 10px; padding: 10px 20px; font-size: 12px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);">
+          前往前台視角
+        </button>
       </div>
-      <div class="card-body">
-        <div class="pill-label" style="font-size:11px; font-weight:700; color:var(--text-muted);">選擇企劃人員</div>
-        <div id="planner-pills" class="pill-container" style="margin-bottom:20px;"></div>
-        <div class="pill-label" style="font-size:11px; font-weight:700; color:var(--text-muted);">選擇設計人員</div>
-        <div id="designer-pills" class="pill-container"></div>
+      <div class="card-body" style="padding: 32px; display: flex; flex-direction: column; gap: 24px;">
+        <!-- 企劃人員區塊 -->
+        <div style="background: #FAF9F6; border: 1px solid var(--apple-border); padding: 20px 24px; border-radius: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span style="color: var(--apple-blue);">●</span> 選擇企劃人員 <span style="font-weight: 400; text-transform: none; color: var(--text-muted); margin-left: 4px;">(點選以快速過濾旗下負責建案)</span>
+          </div>
+          <div id="planner-pills" class="pill-container" style="gap: 8px;"></div>
+        </div>
+
+        <!-- 設計人員區塊 -->
+        <div style="background: #FAF9F6; border: 1px solid var(--apple-border); padding: 20px 24px; border-radius: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span style="color: var(--green);">●</span> 選擇設計人員 <span style="font-weight: 400; text-transform: none; color: var(--text-muted); margin-left: 4px;">(點選以快速過濾旗下負責設計之建案)</span>
+          </div>
+          <div id="designer-pills" class="pill-container" style="gap: 8px;"></div>
+        </div>
       </div>
     </section>
 
@@ -376,7 +395,7 @@ function loadWeeklyRecords() {
 
 const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
 
-// 🚀 [解決問題2] 週次自動轉換成精準的日期區間，絕不混淆
+// ── ⏳ 智慧週別日期演算模組 ──
 function getWeekString(offset = 0) {
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + (offset * 7));
@@ -398,7 +417,7 @@ function getWeekDateRange(offset = 0) {
   const pad = (num) => String(num).padStart(2, '0');
   const formatDate = (d) => `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
   
-  // 取得週別主鍵並附加日期區間顯示
+  // 取得週別主鍵並附加實際日期區間
   const weekKey = getWeekString(offset);
   return `${weekKey} (${formatDate(monday)} ~ ${formatDate(sunday)})`;
 }
@@ -425,7 +444,7 @@ function getCalculatedTenure(year, month) {
   return `${years} 年 ${months} 個月`;
 }
 
-// ── 🔒 安全設計：自訂 Apple 風格彈窗代替 alert/confirm ──
+// ── 🔒 安全設計：自訂 Apple 風格彈窗 ──
 function showConfirm(message, onConfirm) {
   const overlay = document.createElement('div');
   overlay.style = "position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999999;";
@@ -461,6 +480,7 @@ function showAlert(message) {
   document.getElementById('alert-ok').onclick = () => overlay.remove();
 }
 
+// ── 🚀 系統主程式 ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
@@ -495,7 +515,7 @@ class TtadApp {
   }
 
   updateWeekDisplay() {
-    // 解決問題2: 週次按鈕與頂欄直接顯示年資月份區間
+    // 同時顯示週數與實際日期區間
     const label = getWeekDateRange(this.currentWeekOffset);
     document.getElementById('current-week-display').textContent = `報表週別: ${label}`;
   }
@@ -526,11 +546,11 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 🚀 [解決問題3] 採用「案名_地址」作為絕對不重複且不因排序錯位的 Unique Stable ID 
+        // 🚀 採用「案名_地址」作為絕對不重複且不因排序錯位的 Unique Stable ID 
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
-          id: stableId, // 替代原本 index+1 產生的數字 ID
+          id: stableId, // 統一以前後台一致的 Stable ID 來進行資料綁定，完全修復「填寫不更新」之錯配問題！
           category: getCell(0), // A欄 類別
           location: getCell(1), // B欄 區域地址
           company: company,
@@ -1027,6 +1047,7 @@ class TtadApp {
 
 const app = new TtadApp();
 
+// ── 啟動與登入邏輯 ──
 document.addEventListener('DOMContentLoaded', () => {
   loadStaffDatabase();
   loadWeeklyRecords();
