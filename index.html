@@ -590,6 +590,31 @@ class TtadApp {
       const text = await resp.text();
       const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
       
+      // 1. 智慧自動偵測「總戶數」所在列 index (Zero-Config Header Discovery)
+      let totalUnitsColIdx = -1;
+      
+      // 先從 Gviz 定義的 columns 欄位尋找
+      if (json.table.cols) {
+        totalUnitsColIdx = json.table.cols.findIndex(col => {
+          const l = col.label ? String(col.label).replace(/\s+/g, '') : '';
+          return l.includes('總戶數') || l.includes('戶數') || l === '總戶' || l.includes('戶');
+        });
+      }
+      
+      // 如果 columns label 為空，則掃描試算表的第一行 (Rows[0])
+      if (totalUnitsColIdx === -1 && json.table.rows && json.table.rows[0]) {
+        const firstRow = json.table.rows[0];
+        if (firstRow.c) {
+          for (let i = 0; i < firstRow.c.length; i++) {
+            const val = (firstRow.c[i] && firstRow.c[i].v !== null) ? String(firstRow.c[i].v).replace(/\s+/g, '') : '';
+            if (val.includes('總戶數') || val.includes('戶數') || val === '總戶' || val === '戶') {
+              totalUnitsColIdx = i;
+              break;
+            }
+          }
+        }
+      }
+
       this.projectDb = json.table.rows.slice(1).map((r, index) => {
         const getCell = (idx) => (r.c && r.c[idx] && r.c[idx].v !== null) ? String(r.c[idx].v).trim() : '';
         const fullName = getCell(2); 
@@ -606,6 +631,13 @@ class TtadApp {
         // 🚀 採用唯一不重複的組合識別碼 (Stable ID)，徹底解決婉菁在 Google Sheet 中拖曳、排序、插入列導致數據錯位/消失的致命問題！
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
+        // 2. 如果尋找到了總戶數列，動態轉換為數字帶入專案
+        let totalUnits = 0;
+        if (totalUnitsColIdx !== -1) {
+          const rawUnits = getCell(totalUnitsColIdx);
+          totalUnits = parseInt(rawUnits.replace(/[^0-9]/g, '')) || 0;
+        }
+
         return {
           id: stableId, 
           category: getCell(0), // A欄 類別
@@ -614,7 +646,8 @@ class TtadApp {
           name: prjName,
           stage: getCell(3), // D欄 狀態
           planner: sanitizeName(getCell(7)), // H欄 負責企劃 
-          designer: sanitizeName(getCell(8)) // I欄 負責設計 
+          designer: sanitizeName(getCell(8)), // I欄 負責設計 
+          totalUnits: totalUnits // 智慧總戶數
         };
       });
 
@@ -735,7 +768,14 @@ class TtadApp {
     let feedback = currentRecord.feedback || '';
     let currentMedia = currentRecord.currentMedia || '';
     let futureMedia = currentRecord.futureMedia || '';
-    let totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : 0;
+    
+    // 智慧取總戶數：Google 總表優先
+    const pj = this.projectDb.find(p => p.id === projectId);
+    let totalUnits = (pj && pj.totalUnits) ? pj.totalUnits : 0;
+    if (totalUnits === 0) {
+      totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : 0;
+    }
+
     let accSales = currentRecord.accSales !== undefined && currentRecord.accSales !== 0 ? currentRecord.accSales : 0;
 
     let checkWeek = getPrevWeekKey(currentWeek);
@@ -881,13 +921,33 @@ class TtadApp {
     document.getElementById('entry-project-id').value = id;
 
     const metrics = this.getProjectInheritedData(id);
+    const pj = this.projectDb.find(p => p.id === id);
+    const masterUnits = (pj && pj.totalUnits) ? pj.totalUnits : 0;
+
     document.getElementById('entry-visits').value = metrics.visits || '';
     document.getElementById('entry-deals').value = metrics.deals || '';
-    document.getElementById('entry-total-units').value = metrics.totalUnits || '';
     document.getElementById('entry-acc-sales').value = metrics.accSales || '';
     document.getElementById('entry-feedback').value = metrics.feedback === '暫無反應。' ? '' : metrics.feedback;
     document.getElementById('entry-current-media').value = metrics.currentMedia === '暫無媒體。' ? '' : metrics.currentMedia;
     document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
+
+    // 🔒 智慧總戶數安全防護：如果 Google 試算表中有總戶數，鎖定該輸入框免去填寫
+    const totalUnitsInput = document.getElementById('entry-total-units');
+    if (masterUnits > 0) {
+      totalUnitsInput.value = masterUnits;
+      totalUnitsInput.readOnly = true;
+      totalUnitsInput.style.background = '#F5F5F7';
+      totalUnitsInput.style.color = '#86868B';
+      totalUnitsInput.style.border = '1px dashed var(--apple-border)';
+      totalUnitsInput.placeholder = '總表自動帶入，免填寫';
+    } else {
+      totalUnitsInput.value = metrics.totalUnits || '';
+      totalUnitsInput.readOnly = false;
+      totalUnitsInput.style.background = '#FFFFFF';
+      totalUnitsInput.style.color = '#1D1D1F';
+      totalUnitsInput.style.border = '1px solid var(--apple-border)';
+      totalUnitsInput.placeholder = '0';
+    }
   }
 
   closeDataModal() { document.getElementById('data-entry-modal').style.display = 'none'; }
@@ -1130,7 +1190,7 @@ class TtadApp {
         • <strong>全局總成交量</strong>：<span style="font-size:14px; font-weight:700; color:var(--green);">${totalDeals}</span> 組<br>
         • <strong>平均成交轉化率</strong>：<span style="font-weight:700;">${conversionRate}%</span><br>
         • <strong>活躍建案數</strong>：在進行中的個案中，本週共有 <span style="font-weight:700;">${projectsWithData}</span> 個案場完成數據填報。<br><br>
-        🔥 <strong>本週人氣王</strong>：由 <strong>【${bestProjectName(this.projectDb, WEEKLY_RECORDS_DB, getWeekString(this.currentWeekOffset))}】</strong> 奪得！本週成交 <strong>${bestProject.deals}</strong> 組，表現非常亮眼，值得全體企劃與設計同仁學習與致敬！
+        🔥 <strong>本週人氣王</strong>：由 <strong>【${bestProject.company}-${bestProject.name}】</strong> 奪得！本週成交 <strong>${bestProject.deals}</strong> 組，表現非常亮眼，值得全體企劃與設計同仁學習與致敬！
       `;
     }
 
@@ -1354,21 +1414,6 @@ class TtadApp {
   }
 }
 
-// ── 智慧分析助手專用輔助函式 ──
-function bestProjectName(projectDb, WEEKLY_RECORDS_DB, weekKey) {
-  let maxDeals = -1;
-  let bestName = '暫無成交個案';
-  projectDb.forEach(p => {
-    const currentRecord = (WEEKLY_RECORDS_DB[weekKey] && WEEKLY_RECORDS_DB[weekKey][p.id]) || {};
-    const deals = parseInt(currentRecord.deals) || 0;
-    if (deals > maxDeals && deals > 0) {
-      maxDeals = deals;
-      bestName = p.name;
-    }
-  });
-  return bestName;
-}
-
 const app = new TtadApp();
 
 // ── 啟動與登入邏輯 ──
@@ -1410,7 +1455,7 @@ function handlePasscodeLogin() {
   const month = document.getElementById('apple-user-tenure-month').value;
   const dept = document.querySelector('input[name="dept-select"]:checked').value;
 
-  if (!name || !mail || !year || !month) { showAlert('請填寫完整的登入資訊'); return; }
+  if (!name || !mail || !year || !month) { alert('請填寫完整的登入資訊'); return; }
 
   localStorage.setItem('ttad_mail', mail);
   localStorage.setItem('ttad_name', name);
