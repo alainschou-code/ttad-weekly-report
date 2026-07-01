@@ -182,7 +182,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </header>
 
   <div class="app-container">
-    <!-- 管理部主控台 (引進極精緻黃金比例 Layout) -->
+    <!-- 管理部主控台 (黃金比例 Layout 升級版) -->
     <section id="admin-panel" class="card" style="display: none; border-radius: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--apple-border); background: var(--apple-surface); margin-bottom: 32px; overflow: hidden;">
       <div class="card-header" style="padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); background: rgba(0,0,0,0.01);">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -444,7 +444,7 @@ function loadWeeklyRecords() {
 
 const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
 
-// 智慧日期區間解析 (產出 W26 (06/22 ~ 06/28) 格式，解決週數容易搞混問題)
+// 智慧日期區間解析 (產出 W26 (06/22 ~ 06/28) 格式)
 function getWeekString(offset = 0) {
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + (offset * 7));
@@ -457,15 +457,11 @@ function getWeekDateRange(offset = 0) {
   const today = new Date();
   const target = new Date(today.getTime() + (offset * 7 * 24 * 60 * 60 * 1000));
   const day = target.getDay();
-  // 週一對齊
   const diffToMonday = target.getDate() - day + (day === 0 ? -6 : 1);
-  
   const monday = new Date(target.getFullYear(), target.getMonth(), diffToMonday);
   const sunday = new Date(monday.getTime() + 6 * 24 * 60 * 60 * 1000);
-  
   const pad = (num) => String(num).padStart(2, '0');
   const formatDate = (d) => `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
-  
   const weekKey = getWeekString(offset);
   return `${weekKey} (${formatDate(monday)} ~ ${formatDate(sunday)})`;
 }
@@ -492,7 +488,7 @@ function getCalculatedTenure(year, month) {
   return `${years} 年 ${months} 個月`;
 }
 
-// ── 智慧自訂對話框 ──
+// ── 智慧自訂對話框 (替代 alert 與 confirm) ──
 function showAlert(message) {
   const overlay = document.createElement('div');
   overlay.className = "modal-overlay";
@@ -529,7 +525,6 @@ function showConfirm(message, onConfirm) {
   document.getElementById('confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
 }
 
-// ── 系統核心 TtadApp ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
@@ -591,7 +586,6 @@ class TtadApp {
       let isRow0Header = false;
       let headers = [];
 
-      // 1. 檢測標頭
       if (json.table.cols && json.table.cols.some(col => col.label && !/^[A-Z]$/.test(col.label.trim()))) {
         headers = json.table.cols.map(col => col.label ? String(col.label).trim() : '');
       } 
@@ -622,7 +616,7 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 採用不重複之複合唯一金鑰，避免排序後對位錯誤
+        // 採用不重複之複合永久唯一金鑰，避免排序後對位錯誤
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
@@ -806,7 +800,7 @@ class TtadApp {
         return true; 
       }
       
-      // 2. 主管切換到前台唯讀透視模式：開啟全能視野（顯示全體進行中專案）
+      // 2. 主管前台唯讀模式：全能視野（顯示全體進行中專案）
       if (this.originalDept === '管理部' && this.currentDept !== '管理部') {
         return true;
       }
@@ -824,19 +818,12 @@ class TtadApp {
       const metrics = this.getProjectInheritedData(p.id);
       const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
-      // 總銷金額高雅靠右並列呈現
-      const displaySales = metrics.totalSales || '未填';
-
       return `
         <div class="project-card">
-          <!-- 左側建案元資訊 -->
+          <!-- 左側建案元資訊 (已完全取消 總銷金額 的顯示) -->
           <div>
             <div class="pj-company">${p.company}</div>
-            <!-- 總銷金額並列在個案名稱右邊，以最精緻不吃邊的規格呈現 -->
-            <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin:3px 0 8px;">
-              <div class="pj-name" style="margin:0;">${p.name}</div>
-              <span style="font-size:12px; color:var(--text-muted); font-weight:500;">(總銷: ${displaySales})</span>
-            </div>
+            <div class="pj-name">${p.name}</div>
             <div style="margin-bottom: 12px;">
               <span class="badge-tag" style="background:${categoryColor}; color:white;">${p.category}</span>
               <span style="font-size:11px; color:var(--text-muted)">📍 ${p.location}</span>
@@ -898,7 +885,7 @@ class TtadApp {
     document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
     document.getElementById('entry-total-sales').value = metrics.totalSales || '';
 
-    // 🔓 已取消總戶數強行帶入鎖定，將編輯權限完全歸還予同仁自由填寫
+    // 🔓 總戶數編輯完全歸還予同仁自由填寫
     const totalUnitsInput = document.getElementById('entry-total-units');
     totalUnitsInput.value = metrics.totalUnits || '';
     totalUnitsInput.readOnly = false;
@@ -1010,7 +997,7 @@ class TtadApp {
       this.setCloudStatus('🟡', '正在背景同步數據...');
       await fetch(CLOUD_API_URL, {
         method: 'POST',
-        mode: 'no-cors', // 允許跨網域寫入
+        mode: 'no-cors', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           week: weekKey,
@@ -1331,7 +1318,7 @@ class TtadApp {
         this.showToast('📸 正在啟用 4K 高解析度無損渲染，請稍候...');
         const element = document.getElementById('project-list-container');
         
-        // 暫時無感滾動至頂部對齊，防止渲染出現白邊
+        // 暫時滾動至頂部對齊，防止渲染出現白邊
         const origScrollTop = window.scrollY;
         window.scrollTo(0, 0);
 
@@ -1343,7 +1330,7 @@ class TtadApp {
             logging: false,
             backgroundColor: '#F5F5F7'
           }).then(canvas => {
-            window.scrollTo(0, origScrollTop); // 恢復滾動
+            window.scrollTo(0, origScrollTop); 
 
             const link = document.createElement('a');
             const weekKey = getWeekString(this.currentWeekOffset);
