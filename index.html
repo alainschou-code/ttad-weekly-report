@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TTAD GROUP 天子創意來客週報表</title>
 
-<!-- 外部核心 SDK -->
+<!-- 外部核心 SDK 整合 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
@@ -64,12 +64,12 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .card-header { padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); }
 .card-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
 
-/* 週次導覽列 */
+/* 週次智慧導覽 */
 .week-navigator { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.05); padding: 4px; border-radius: 10px; }
 .week-btn { border: none; background: transparent; padding: 6px 14px; font-size: 12px; font-family: var(--font); cursor: pointer; border-radius: 8px; transition: all 0.2s; color: var(--text-main); font-weight: 500; }
 .week-btn.active { background: var(--apple-surface); box-shadow: var(--shadow-sm); font-weight: 600; }
 
-/* 人員膠囊篩選器 */
+/* 篩選器膠囊 */
 .pill-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .pill-btn { border: 1px solid var(--apple-border); background: #F5F5F7; color: var(--text-main); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
 .pill-btn:hover { background: #E8E8ED; }
@@ -332,6 +332,8 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </div>
 </div>
 
+<div id="toast" class="toast"></div>
+
 <script>
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1h1M0aYwS8nwEgUnlpBXj1rxWbEbzhvSfZzB5NHbcS20/gviz/tq?gid=1006460624';
 const ADMIN_WHITELIST = ['alains.chou@gmail.com', 'yuhsia0911@gmail.com'];
@@ -358,7 +360,6 @@ let STAFF_DATABASE = {
 };
 
 let WEEKLY_RECORDS_DB = {};
-// 預先填入您剛剛發佈成功的 Google Apps Script 執行網址
 let CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbzU_g8oE4UQrOK7sz8aeCEibpxf1NLfboDG4CVq61bxcu301q1dYrYH_Pae2S41UIiwcA/exec';
 
 function saveStaffDatabase() { localStorage.setItem('ttad_staff_db_v4', JSON.stringify(STAFF_DATABASE)); }
@@ -375,12 +376,31 @@ function loadWeeklyRecords() {
 
 const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
 
+// 🚀 [解決問題2] 週次自動轉換成精準的日期區間，絕不混淆
 function getWeekString(offset = 0) {
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + (offset * 7));
   const startOfYear = new Date(targetDate.getFullYear(), 0, 1);
   const weekNum = Math.ceil((((targetDate - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
   return `${targetDate.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+function getWeekDateRange(offset = 0) {
+  const today = new Date();
+  const target = new Date(today.getTime() + (offset * 7 * 24 * 60 * 60 * 1000));
+  const day = target.getDay();
+  // 修正週一對齊
+  const diffToMonday = target.getDate() - day + (day === 0 ? -6 : 1);
+  
+  const monday = new Date(target.getFullYear(), target.getMonth(), diffToMonday);
+  const sunday = new Date(monday.getTime() + 6 * 24 * 60 * 60 * 1000);
+  
+  const pad = (num) => String(num).padStart(2, '0');
+  const formatDate = (d) => `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+  
+  // 取得週別主鍵並附加日期區間顯示
+  const weekKey = getWeekString(offset);
+  return `${weekKey} (${formatDate(monday)} ~ ${formatDate(sunday)})`;
 }
 
 function getPrevWeekKey(weekKey) {
@@ -405,7 +425,42 @@ function getCalculatedTenure(year, month) {
   return `${years} 年 ${months} 個月`;
 }
 
-// ── 系統核心 TtadApp ──
+// ── 🔒 安全設計：自訂 Apple 風格彈窗代替 alert/confirm ──
+function showConfirm(message, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.style = "position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999999;";
+  overlay.innerHTML = `
+    <div style="background:white; border-radius:14px; padding:24px; max-width:320px; width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.08);">
+      <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">確認操作</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">${message}</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <button id="confirm-cancel" style="border:none; background:#E8E8ED; color:#1D1D1F; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">取消</button>
+        <button id="confirm-ok" style="border:none; background:var(--red); color:white; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">確定</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('confirm-cancel').onclick = () => overlay.remove();
+  document.getElementById('confirm-ok').onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+}
+
+function showAlert(message) {
+  const overlay = document.createElement('div');
+  overlay.style = "position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999999;";
+  overlay.innerHTML = `
+    <div style="background:white; border-radius:14px; padding:24px; max-width:320px; width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.08);">
+      <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">系統提示</div>
+      <div style="font-size:13px; color:var(--text-main); margin-bottom:20px; line-height:1.5;">${message}</div>
+      <button id="alert-ok" style="width:100%; border:none; background:var(--apple-blue); color:white; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">確定</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('alert-ok').onclick = () => overlay.remove();
+}
+
 class TtadApp {
   constructor() {
     this.projectDb = [];
@@ -440,7 +495,8 @@ class TtadApp {
   }
 
   updateWeekDisplay() {
-    const label = getWeekString(this.currentWeekOffset);
+    // 解決問題2: 週次按鈕與頂欄直接顯示年資月份區間
+    const label = getWeekDateRange(this.currentWeekOffset);
     document.getElementById('current-week-display').textContent = `報表週別: ${label}`;
   }
 
@@ -470,15 +526,18 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
+        // 🚀 [解決問題3] 採用「案名_地址」作為絕對不重複且不因排序錯位的 Unique Stable ID 
+        const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
+
         return {
-          id: String(index + 1),
+          id: stableId, // 替代原本 index+1 產生的數字 ID
           category: getCell(0), // A欄 類別
           location: getCell(1), // B欄 區域地址
           company: company,
           name: prjName,
           stage: getCell(3), // D欄 狀態
-          planner: sanitizeName(getCell(7)), // H欄 負責企劃 (去除空白)
-          designer: sanitizeName(getCell(8)) // I欄 負責設計 (去除空白)
+          planner: sanitizeName(getCell(7)), // H欄 負責企劃 
+          designer: sanitizeName(getCell(8)) // I欄 負責設計
         };
       });
 
@@ -555,7 +614,6 @@ class TtadApp {
     this.renderProjectList(); 
   }
 
-  // 智慧跨週繼承核心 (自動追溯過去填寫過的最深 12 週記錄)
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
     const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
@@ -694,7 +752,6 @@ class TtadApp {
     }).join('');
   }
 
-  // ── 數據填報彈窗 ──
   openDataModal(id, title) {
     document.getElementById('data-entry-modal').style.display = 'flex';
     document.getElementById('data-modal-title').textContent = `填報數據 ➔ ${title}`;
@@ -736,13 +793,11 @@ class TtadApp {
     this.pushDataToCloud();
   }
 
-  // ── ☁️ 雲端同步核心邏輯 ──
   loadCloudConfig() {
     const savedUrl = localStorage.getItem('ttad_cloud_api_url');
     if (savedUrl) {
       CLOUD_API_URL = savedUrl;
     } else {
-      // 預設填入您剛剛部署成功的 Google Apps Script 執行網址
       CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbzU_g8oE4UQrOK7sz8aeCEibpxf1NLfboDG4CVq61bxcu301q1dYrYH_Pae2S41UIiwcA/exec';
     }
     
@@ -785,7 +840,6 @@ class TtadApp {
     this.pushDataToCloud();
   }
 
-  // 背景發送：自動推送本週總表至雲端資料夾
   async pushDataToCloud() {
     if (!CLOUD_API_URL) return;
     
@@ -796,7 +850,7 @@ class TtadApp {
       this.setCloudStatus('🟡', '正在背景同步數據...');
       await fetch(CLOUD_API_URL, {
         method: 'POST',
-        mode: 'no-cors', // 允許跨網域向 GAS 發送寫入
+        mode: 'no-cors', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           week: weekKey,
@@ -814,7 +868,6 @@ class TtadApp {
     }
   }
 
-  // 背景發送：從雲端獲取最新團隊總表
   async pullDataFromCloud() {
     if (!CLOUD_API_URL) return;
     
@@ -825,7 +878,6 @@ class TtadApp {
       const result = await response.json();
       
       if (result && result.status === 'success' && result.data && result.data.records) {
-        // 將雲端拉取下來的最新數據，與本機進行智慧合併
         if (!WEEKLY_RECORDS_DB[weekKey]) WEEKLY_RECORDS_DB[weekKey] = {};
         
         WEEKLY_RECORDS_DB[weekKey] = {
@@ -866,7 +918,7 @@ class TtadApp {
           </div>
           <div>
             ${isLocked ? '<span style="font-size: 11px; color: var(--text-muted); font-weight:600;">🔒 系統主管</span>' : 
-            `<button class="btn btn-ghost btn-sm" style="color:var(--red); padding:4px 8px;" onclick="app.deletePersonnel('${email}')">離職刪除</button>`}
+            `<button class="btn btn-ghost btn-sm" style="color:var(--red); padding:4px 8px;" onclick="app.deletePersonnelConfirm('${email}')">離職刪除</button>`}
           </div>
         </div>
       `;
@@ -880,8 +932,8 @@ class TtadApp {
     const year = parseInt(document.getElementById('m-staff-join-year').value);
     const month = parseInt(document.getElementById('m-staff-join-month').value);
 
-    if (!name || !email || !year || !month) { alert('請填寫完整的新同仁基本資料'); return; }
-    if (STAFF_DATABASE[email]) { alert('此同仁帳號已存在名單中。'); return; }
+    if (!name || !email || !year || !month) { showAlert('請填寫完整的新同仁基本資料'); return; }
+    if (STAFF_DATABASE[email]) { showAlert('此同仁帳號已存在名單中。'); return; }
 
     STAFF_DATABASE[email] = { name, joinYear: year, joinMonth: month, dept };
     saveStaffDatabase();
@@ -895,11 +947,15 @@ class TtadApp {
     this.showToast(`✅ 新同仁 ${name} 已成功註冊入名單！`);
   }
 
-  deletePersonnel(email) {
+  deletePersonnelConfirm(email) {
     if (ADMIN_WHITELIST.includes(email)) return;
     const name = STAFF_DATABASE[email]?.name || '同仁';
-    if (!confirm(`確定要將「${name}」從系統同仁名單中刪除並標記為離職嗎？`)) return;
+    showConfirm(`確定要將「${name}」從系統同仁名單中刪除並標記為離職嗎？`, () => {
+      this.deletePersonnel(email);
+    });
+  }
 
+  deletePersonnel(email) {
     delete STAFF_DATABASE[email];
     saveStaffDatabase();
     
@@ -922,27 +978,55 @@ class TtadApp {
   }
 
   setupGlobalEvents() {
-    document.getElementById('btn-4k-screenshot').onclick = () => {
-      this.showToast('📸 正在啟用高解析度畫布渲染，請稍候...');
-      const element = document.getElementById('project-list-container');
-      html2canvas(element, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#F5F5F7'
-      }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `[天子創意]_${this.currentStaffName}_週報_${getWeekString(this.currentWeekOffset)}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        this.showToast('✅ 螢幕截圖已儲存並下載！');
-      });
-    };
+    const btn = document.getElementById('btn-4k-screenshot');
+    if (btn) {
+      btn.onclick = () => {
+        if (typeof html2canvas === 'undefined') {
+          this.showToast('❌ 截圖功能未就緒，請重新整理網頁！');
+          return;
+        }
+
+        this.showToast('📸 正在啟用高解析度無損渲染，請稍候...');
+        const element = document.getElementById('project-list-container');
+        
+        // 臨時將捲軸移到最上方，防止 html2canvas 產生白色截斷
+        const origScrollTop = window.scrollY;
+        window.scrollTo(0, 0);
+
+        try {
+          html2canvas(element, {
+            scale: 2.5, // 調整至 2.5 倍以優化效能並確保超清晰輸出
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            backgroundColor: '#F5F5F7'
+          }).then(canvas => {
+            // 還原捲軸高度
+            window.scrollTo(0, origScrollTop);
+
+            const link = document.createElement('a');
+            const weekKey = getWeekString(this.currentWeekOffset);
+            link.download = `[天子創意]_${this.currentStaffName}_週報_${weekKey}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            this.showToast('✅ 螢幕截圖已儲存並下載！');
+          }).catch(err => {
+            console.error('html2canvas 渲染發生異常:', err);
+            window.scrollTo(0, origScrollTop);
+            this.showToast('❌ 圖片繪製失敗，請嘗試使用系統原生截圖功能！');
+          });
+        } catch (e) {
+          console.error('螢幕截圖初始化失敗:', e);
+          window.scrollTo(0, origScrollTop);
+          this.showToast('❌ 截圖發生異常，請重試！');
+        }
+      };
+    }
   }
 }
 
 const app = new TtadApp();
 
-// ── 啟動與登入邏輯 ──
 document.addEventListener('DOMContentLoaded', () => {
   loadStaffDatabase();
   loadWeeklyRecords();
@@ -981,7 +1065,7 @@ function handlePasscodeLogin() {
   const month = document.getElementById('apple-user-tenure-month').value;
   const dept = document.querySelector('input[name="dept-select"]:checked').value;
 
-  if (!name || !mail || !year || !month) { alert('請填寫完整的登入資訊'); return; }
+  if (!name || !mail || !year || !month) { showAlert('請填寫完整的登入資訊'); return; }
 
   localStorage.setItem('ttad_mail', mail);
   localStorage.setItem('ttad_name', name);
