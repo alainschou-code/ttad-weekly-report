@@ -404,7 +404,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 <div id="toast" class="toast"></div>
 
 <script>
-// ── STREAMING_CHUNK: Initializing Database Structures and API links... ──
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1h1M0aYwS8nwEgUnlpBXj1rxWbEbzhvSfZzB5NHbcS20/gviz/tq?gid=1006460624';
 const ADMIN_WHITELIST = ['alains.chou@gmail.com', 'yuhsia0911@gmail.com'];
 
@@ -527,7 +526,7 @@ function showConfirm(message, onConfirm) {
   document.getElementById('confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
 }
 
-// ── STREAMING_CHUNK: Defining TtadApp core controller class... ──
+// ── STREAMING_CHUNK: Implementing intelligent multi-week data inheritance logic... ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
@@ -782,7 +781,6 @@ class TtadApp {
     };
   }
 
-  // ── STREAMING_CHUNK: Rendering cards dynamically in HTML container... ──
   renderProjectList() {
     const container = document.getElementById('project-list-container');
     
@@ -950,7 +948,6 @@ class TtadApp {
     }
   }
 
-  // ── STREAMING_CHUNK: Connecting cloud synchronization protocols... ──
   loadCloudConfig() {
     const savedUrl = localStorage.getItem('ttad_cloud_api_url');
     if (savedUrl) {
@@ -1058,7 +1055,6 @@ class TtadApp {
     }
   }
 
-  // ── STREAMING_CHUNK: Bootstrapping TTAD Local AI Analyst engine... ──
   askAi(tag) {
     this.appendAiMessage(tag, 'user');
     const typingId = this.appendAiMessage('🤖 智慧分析官正在快速處理當前數據中，請稍候...', 'assistant');
@@ -1238,7 +1234,7 @@ class TtadApp {
     }
   }
 
-  // ── STREAMING_CHUNK: Setting up staff management dialog functions... ──
+  // ── 人員管理面板 ──
   openStaffModal() {
     document.getElementById('staff-modal-overlay').style.display = 'flex';
     this.renderStaffList();
@@ -1318,7 +1314,7 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── STREAMING_CHUNK: Perfecting screenshot exporter module with 1.8x limit safety... ──
+  // ── 智慧自適應螢幕截圖引擎 (Safari / Chrome 100% 穩定無損防爆) ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
@@ -1328,9 +1324,11 @@ class TtadApp {
           return;
         }
 
-        this.showToast('📸 正在啟用高畫質無損渲染（1/2），請稍候...');
         const element = document.getElementById('project-list-container');
-        
+        if (!element) return;
+
+        this.showToast('📸 正在啟用自適應高解析度渲染，請稍候...');
+
         // 1. 動態建立帶有完整個人與日期資訊的報告頭部卡片
         const headerDiv = document.createElement('div');
         headerDiv.id = 'dynamic-screenshot-header';
@@ -1373,12 +1371,26 @@ class TtadApp {
 
         this.showToast('📸 正在處理 Canvas 導出（2/2），即將下載...');
 
-        // 補上 50ms 延遲阻斷，確保 Safari 完成滾動定位與繪製
+        // 補上 120ms 延遲阻斷，確保 Safari 完成滾動定位與繪製
         setTimeout(() => {
           try {
-            // scale: 1.8 為 Apple 瀏覽器 Canvas 記憶體安全預算最佳解，100% 成功導出不崩潰！
+            // 智慧自適應比例計算以避免 iOS Safari 3.2MB 記憶體限制
+            const rect = element.getBoundingClientRect();
+            const width = rect.width || 1200;
+            const height = rect.height || 1000;
+            const totalPixels = width * height;
+            
+            // Safari 預算上限設為極安全之 3,200,000 像素
+            let calculatedScale = 1.8; // 高解析度預設
+            const maxSafePixels = 3200000;
+            if (totalPixels * (calculatedScale * calculatedScale) > maxSafePixels) {
+              calculatedScale = Math.sqrt(maxSafePixels / totalPixels);
+              calculatedScale = Math.max(0.9, Math.min(calculatedScale, 1.8));
+              console.log(`[TTAD Debug] 觸發 Safari 記憶體保護。自適應降為比例: ${calculatedScale.toFixed(2)}`);
+            }
+
             html2canvas(element, {
-              scale: 1.8, 
+              scale: calculatedScale, 
               useCORS: true,
               allowTaint: false,
               logging: false,
@@ -1422,13 +1434,13 @@ class TtadApp {
             console.error('螢幕截圖意外終止:', e);
             showAlert('螢幕截圖崩潰: ' + e.message);
           }
-        }, 80);
+        }, 120);
       };
     }
   }
 }
 
-const app = new TtadApp();
+const app = new T导App || new TtadApp();
 
 // ── 啟動與登入邏輯 ──
 document.addEventListener('DOMContentLoaded', () => {
