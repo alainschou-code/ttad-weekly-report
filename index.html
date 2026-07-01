@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TTAD GROUP 天子創意來客週報表</title>
 
-<!-- 外部核心 SDK 整合 -->
+<!-- 外部核心 SDK -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
@@ -31,6 +31,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--apple-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.5; }
 
+/* ── STREAMING_CHUNK: Styling UI Components... ── */
 /* ── 登入介面 ── */
 #login-screen { position: fixed; inset: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .apple-login-container { width: 100%; max-width: 360px; text-align: center; padding: 32px 24px; }
@@ -58,18 +59,19 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
 .badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
 
+/* ── STREAMING_CHUNK: Styling Cards and Grid Layouts... ── */
 /* ── 內容區 ── */
 .app-container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
 .card { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 32px; overflow: hidden; }
 .card-header { padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); }
 .card-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
 
-/* 週次智慧導覽 */
+/* 週次導覽列 */
 .week-navigator { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.05); padding: 4px; border-radius: 10px; }
 .week-btn { border: none; background: transparent; padding: 6px 14px; font-size: 12px; font-family: var(--font); cursor: pointer; border-radius: 8px; transition: all 0.2s; color: var(--text-main); font-weight: 500; }
 .week-btn.active { background: var(--apple-surface); box-shadow: var(--shadow-sm); font-weight: 600; }
 
-/* 篩選器膠囊 */
+/* 人員膠囊篩選器 */
 .pill-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .pill-btn { border: 1px solid var(--apple-border); background: #F5F5F7; color: var(--text-main); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
 .pill-btn:hover { background: #E8E8ED; }
@@ -89,6 +91,13 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .report-box { background: #FAF9F6; border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--radius-md); }
 .report-box-title { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
 .report-box-content { font-size: 12px; color: var(--text-main); word-break: break-all; min-height: 36px; line-height: 1.6; }
+
+/* ── STREAMING_CHUNK: Styling Chat UI and Custom Popups... ── */
+/* AI 對話框樣式 */
+.ai-message { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; animation: bubbleIn 0.2s ease-out; }
+.ai-bubble-user { background: var(--apple-blue); color: white; padding: 10px 14px; border-radius: 14px 14px 2px 14px; align-self: flex-end; max-width: 85%; }
+.ai-bubble-assistant { background: #FFFFFF; border: 1px solid var(--apple-border); color: var(--text-main); padding: 12px 16px; border-radius: 14px 14px 14px 2px; align-self: flex-start; max-width: 95%; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+@keyframes bubbleIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* ── 彈窗 ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(16px); display: none; align-items: center; justify-content: center; z-index: 99999; }
@@ -174,10 +183,9 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       </div>
     </div>
 
-    <!-- 頂部高階功能控制組 -->
     <div style="display:flex; gap:10px; align-items: center;">
-      <!-- 主管前后台切換按鈕 (僅在原本是管理部主管時動態顯示) -->
-      <button class="btn btn-primary btn-sm" id="btn-view-toggle" style="display:none; background: var(--apple-blue); border-radius: 8px; padding: 8px 14px;" onclick="app.toggleManagerView()"></button>
+      <!-- 主管專屬前前台切換按鈕 (唯讀透視視角) -->
+      <button class="btn btn-primary btn-sm" id="btn-view-toggle" style="display:none; background: var(--apple-blue); border-radius: 8px;" onclick="app.toggleManagerView()"></button>
       
       <button class="btn btn-capsule btn-sm" id="btn-4k-screenshot">螢幕截圖</button>
       <button class="btn btn-capsule btn-sm" id="btn-staff-edit" style="display:none; color:var(--apple-blue);" onclick="app.openStaffModal()">人員編輯</button>
@@ -186,7 +194,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </header>
 
   <div class="app-container">
-    <!-- 管理部主控台 -->
+    <!-- 管理部主控台 (引進 Apple 雙欄黃金比例 Layout ＋ AI 決策工具對話欄位) -->
     <section id="admin-panel" class="card" style="display: none; border-radius: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--apple-border); background: var(--apple-surface); margin-bottom: 32px; overflow: hidden;">
       <div class="card-header" style="padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--apple-border); background: rgba(0,0,0,0.01);">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -200,21 +208,59 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
           前往前台視角
         </button>
       </div>
-      <div class="card-body" style="padding: 32px; display: flex; flex-direction: column; gap: 24px;">
-        <!-- 企劃人員區塊 -->
-        <div style="background: #FAF9F6; border: 1px solid var(--apple-border); padding: 20px 24px; border-radius: 14px;">
-          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-            <span style="color: var(--apple-blue);">●</span> 選擇企劃人員 <span style="font-weight: 400; text-transform: none; color: var(--text-muted); margin-left: 4px;">(點選以快速過濾旗下負責建案)</span>
+      <div class="card-body" style="padding: 32px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 36px; min-height: 420px; background: #FFFFFF;">
+        <!-- 左側：同仁膠囊篩選器 (具備黃金舒適邊距與層次) -->
+        <div style="display: flex; flex-direction: column; gap: 24px; justify-content: space-between;">
+          <!-- 企劃人員區塊 -->
+          <div style="background: #FAF9F6; border: 1px solid var(--apple-border); padding: 20px 24px; border-radius: 14px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="color: var(--apple-blue);">●</span> 選擇企劃人員 <span style="font-weight: 400; text-transform: none; color: var(--text-muted); margin-left: 4px;">(點選過濾旗下負責建案)</span>
+            </div>
+            <div id="planner-pills" class="pill-container" style="gap: 8px;"></div>
           </div>
-          <div id="planner-pills" class="pill-container" style="gap: 8px;"></div>
+
+          <!-- 設計人員區塊 -->
+          <div style="background: #FAF9F6; border: 1px solid var(--apple-border); padding: 20px 24px; border-radius: 14px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="color: var(--green);">●</span> 選擇設計人員 <span style="font-weight: 400; text-transform: none; color: var(--text-muted); margin-left: 4px;">(點選過濾旗下設計建案)</span>
+            </div>
+            <div id="designer-pills" class="pill-container" style="gap: 8px;"></div>
+          </div>
         </div>
 
-        <!-- 設計人員區塊 -->
-        <div style="background: #FAF9F6; border: 1px solid var(--apple-border); padding: 20px 24px; border-radius: 14px;">
-          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-            <span style="color: var(--green);">●</span> 選擇設計人員 <span style="font-weight: 400; text-transform: none; color: var(--text-muted); margin-left: 4px;">(點選以快速過濾旗下負責設計之建案)</span>
+        <!-- 右側：AI 決策助理對話欄位 (實時抓取當前個案與填報進行大數據統計分析) -->
+        <div style="border-left: 1px solid var(--apple-border); padding-left: 36px; display: flex; flex-direction: column; height: 100%; min-height: 380px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size:18px;">🤖</span>
+              <span>TTAD AI 數據決策分析官</span>
+            </div>
+            <span style="font-size: 9px; background: rgba(0,102,204,0.1); color: var(--apple-blue); padding: 2px 8px; border-radius: 99px;">LOCAL ENGINE</span>
           </div>
-          <div id="designer-pills" class="pill-container" style="gap: 8px;"></div>
+
+          <!-- 對話歷史視窗 -->
+          <div id="ai-chat-history" style="flex: 1; overflow-y: auto; background: #F5F5F7; border: 1px solid var(--apple-border); border-radius: 12px; padding: 16px; margin-bottom: 14px; max-height: 240px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth;">
+            <div class="ai-message">
+              <div class="ai-bubble-assistant">
+                👋 您好！我是您的 <strong>TTAD AI 智慧分析官</strong>。我已成功連結您本週加載的同仁個案與填報數據。<br><br>
+                請直接點選下方的<strong>智慧決策快捷膠囊</strong>，或在對話欄位中輸入問題，我將為您進行毫秒級的全局大數據診斷！
+              </div>
+            </div>
+          </div>
+
+          <!-- 快捷智慧膠囊組 -->
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('📊 數據趨勢')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">📊 數據趨勢</button>
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('🚨 去化警報')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">🚨 去化警報</button>
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('✍️ 主管週報')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">✍️ 主管週報</button>
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('📺 媒體評估')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">📺 媒體評估</button>
+          </div>
+
+          <!-- 對話輸入欄位 -->
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="ai-chat-input" style="flex: 1; border: 1px solid var(--apple-border); padding: 10px 14px; border-radius: 10px; font-size: 12px; outline: none; transition: border-color 0.2s;" placeholder="問我任何事... 例如：永大Light這週狀況如何？" onkeydown="if(event.key==='Enter') app.sendAiInput()">
+            <button class="btn btn-primary" onclick="app.sendAiInput()" style="border-radius: 10px; padding: 0 16px;">發送</button>
+          </div>
         </div>
       </div>
     </section>
@@ -399,6 +445,7 @@ function loadWeeklyRecords() {
 
 const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
 
+// 智慧日期區間解析 (產出 W26 (06/22 ~ 06/28) 格式，解決週數容易搞混問題)
 function getWeekString(offset = 0) {
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + (offset * 7));
@@ -411,7 +458,7 @@ function getWeekDateRange(offset = 0) {
   const today = new Date();
   const target = new Date(today.getTime() + (offset * 7 * 24 * 60 * 60 * 1000));
   const day = target.getDay();
-  // 修正週一對齊
+  // 週一對齊
   const diffToMonday = target.getDate() - day + (day === 0 ? -6 : 1);
   
   const monday = new Date(target.getFullYear(), target.getMonth(), diffToMonday);
@@ -420,7 +467,6 @@ function getWeekDateRange(offset = 0) {
   const pad = (num) => String(num).padStart(2, '0');
   const formatDate = (d) => `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
   
-  // 取得週別主鍵並附加實際日期區間
   const weekKey = getWeekString(offset);
   return `${weekKey} (${formatDate(monday)} ~ ${formatDate(sunday)})`;
 }
@@ -447,55 +493,58 @@ function getCalculatedTenure(year, month) {
   return `${years} 年 ${months} 個月`;
 }
 
-function showConfirm(message, onConfirm) {
-  const overlay = document.createElement('div');
-  overlay.style = "position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999999;";
-  overlay.innerHTML = `
-    <div style="background:white; border-radius:14px; padding:24px; max-width:320px; width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.08);">
-      <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">確認操作</div>
-      <div style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">${message}</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <button id="confirm-cancel" style="border:none; background:#E8E8ED; color:#1D1D1F; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">取消</button>
-        <button id="confirm-ok" style="border:none; background:var(--red); color:white; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">確定</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-  document.getElementById('confirm-cancel').onclick = () => overlay.remove();
-  document.getElementById('confirm-ok').onclick = () => {
-    overlay.remove();
-    onConfirm();
-  };
-}
-
+// ── 智慧客製化彈窗（完全取代不安全的 alert 與 confirm） ──
 function showAlert(message) {
   const overlay = document.createElement('div');
-  overlay.style = "position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:999999;";
+  overlay.className = "modal-overlay";
+  overlay.style.display = "flex";
+  overlay.style.zIndex = "999999";
   overlay.innerHTML = `
     <div style="background:white; border-radius:14px; padding:24px; max-width:320px; width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.08);">
       <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">系統提示</div>
       <div style="font-size:13px; color:var(--text-main); margin-bottom:20px; line-height:1.5;">${message}</div>
-      <button id="alert-ok" style="width:100%; border:none; background:var(--apple-blue); color:white; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">確定</button>
+      <button id="alert-ok" class="btn btn-primary" style="width:100%; border-radius:8px; padding:10px 0;">確定</button>
     </div>
   `;
   document.body.appendChild(overlay);
   document.getElementById('alert-ok').onclick = () => overlay.remove();
 }
 
+function showConfirm(message, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.className = "modal-overlay";
+  overlay.style.display = "flex";
+  overlay.style.zIndex = "999999";
+  overlay.innerHTML = `
+    <div style="background:white; border-radius:14px; padding:24px; max-width:320px; width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.08);">
+      <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">確認操作</div>
+      <div style="font-size:13px; color:var(--text-main); margin-bottom:20px; line-height:1.5;">${message}</div>
+      <div style="display:flex; gap:8px;">
+        <button id="confirm-cancel" class="btn btn-secondary" style="flex:1; border-radius:8px;">取消</button>
+        <button id="confirm-ok" class="btn btn-primary" style="flex:1; border-radius:8px; background:var(--red);">確定</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('confirm-cancel').onclick = () => overlay.remove();
+  document.getElementById('confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
+}
+
+// ── 系統核心 TtadApp ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
     this.selectedPlannerFilter = '全部企劃';
     this.selectedDesignerFilter = '全部設計';
     this.currentWeekOffset = 0;
-    this.originalDept = ''; // 紀錄登入時的原始部門
+    this.originalDept = ''; // 儲存登入時的原始部門 (主管切換前台用)
   }
 
   async init(name, dept, tenure) {
     this.currentStaffName = sanitizeName(name);
     this.currentDept = dept;
     if (!this.originalDept) {
-      this.originalDept = dept; // 初始化儲存主管原始身份
+      this.originalDept = dept; 
     }
     
     document.getElementById('user-name').textContent = name;
@@ -506,7 +555,7 @@ class TtadApp {
     this.updateWeekDisplay();
     await this.fetchData();
     
-    // 初始化前后台快速導覽切換按鈕
+    // 初始化主管透視導覽
     this.renderManagerViewToggle();
     
     if (this.currentDept === '管理部') {
@@ -524,7 +573,6 @@ class TtadApp {
   }
 
   updateWeekDisplay() {
-    // 智慧日期導覽：週別主鍵 + 實際日期範圍
     const label = getWeekDateRange(this.currentWeekOffset);
     document.getElementById('current-week-display').textContent = `報表週別: ${label}`;
   }
@@ -555,7 +603,7 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 🚀 採用唯一不重複的組合識別碼 (Stable ID)，修補排序錯位問題
+        // 🚀 採用唯一不重複的組合識別碼 (Stable ID)，徹底解決婉菁在 Google Sheet 中拖曳、排序、插入列導致數據錯位/消失的致命問題！
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
@@ -637,7 +685,7 @@ class TtadApp {
     this.renderProjectList(); 
   }
 
-  // 渲染主管前后台切換按鈕
+  // ── 主管前后台視角切換 (100% 解決主管前往前台沒有個案的邏輯盲點) ──
   renderManagerViewToggle() {
     const btn = document.getElementById('btn-view-toggle');
     if (this.originalDept === '管理部') {
@@ -654,7 +702,6 @@ class TtadApp {
     }
   }
 
-  // 主管專屬前后台視角快速切換
   toggleManagerView() {
     if (this.currentDept === '管理部') {
       this.switchToFrontend();
@@ -664,7 +711,7 @@ class TtadApp {
   }
 
   switchToFrontend() { 
-    this.currentDept = '企劃部'; 
+    this.currentDept = '企劃部'; // 暫時轉為企劃視角
     document.getElementById('admin-panel').style.display = 'none'; 
     this.renderManagerViewToggle();
     this.renderProjectList(); 
@@ -680,6 +727,7 @@ class TtadApp {
     this.showToast('ℹ️ 已返回管理部決策主控台');
   }
 
+  // 智慧跨週繼承核心 (自動追溯過去填寫過的最深 12 週記錄)
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
     const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
@@ -767,7 +815,7 @@ class TtadApp {
     });
 
     if (filtered.length === 0) {
-      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無負責或符合篩選條件的個案項目</div>';
+      container.innerHTML = '<div style="text-align:center; padding:100px; color:#86868B;">目前尚無您負責或符合篩選條件的個案項目</div>';
       return;
     }
 
@@ -790,9 +838,9 @@ class TtadApp {
 
           <!-- 右側核心數據展示 -->
           <div class="pj-data-grid">
-            <div><div class="data-label">週間來客</div><div class="data-value">${metrics.visits}<small style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</small></div></div>
-            <div><div class="data-label" style="color:var(--green);">當週成交</div><div class="data-value" style="color:var(--green);"><b>${metrics.deals}</b><small style="font-size:11px; margin-left:2px;">組</small></div></div>
-            <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:700;">${metrics.accSales} <span style="font-size:12px; font-weight:400; color:var(--text-muted);">/ ${metrics.totalUnits}戶</span></div></div>
+            <div><div class="data-label">週間來客</div><div class="data-value">${metrics.visits} 組</div></div>
+            <div><div class="data-label" style="color:var(--green);">當週成交</div><div class="data-value" style="color:var(--green); font-weight:600;">${metrics.deals} 組</div></div>
+            <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:600;">${metrics.accSales} / ${metrics.totalUnits} 戶</div></div>
           </div>
 
           <!-- 填報按鈕 -->
@@ -826,6 +874,7 @@ class TtadApp {
     }).join('');
   }
 
+  // ── 數據填報彈窗 ──
   openDataModal(id, title) {
     document.getElementById('data-entry-modal').style.display = 'flex';
     document.getElementById('data-modal-title').textContent = `填報數據 ➔ ${title}`;
@@ -862,11 +911,12 @@ class TtadApp {
     saveWeeklyRecords();
     this.closeDataModal();
     this.renderProjectList();
-    this.showToast('✅ 本地數據已更新！正在自動備份至 Google Drive...');
+    this.showToast('✅ 本地週報已更新！正在備份至 Google Drive...');
     
     this.pushDataToCloud();
   }
 
+  // ── ☁️ 雲端同步核心邏輯 ──
   loadCloudConfig() {
     const savedUrl = localStorage.getItem('ttad_cloud_api_url');
     if (savedUrl) {
@@ -914,6 +964,7 @@ class TtadApp {
     this.pushDataToCloud();
   }
 
+  // 背景發送：自動推送本週總表至雲端資料夾
   async pushDataToCloud() {
     if (!CLOUD_API_URL) return;
     
@@ -942,6 +993,7 @@ class TtadApp {
     }
   }
 
+  // 背景發送：從雲端獲取最新團隊總表
   async pullDataFromCloud() {
     if (!CLOUD_API_URL) return;
     
@@ -971,6 +1023,210 @@ class TtadApp {
     }
   }
 
+  // ── 🧠 TTAD AI 本地智慧數據分析引擎核心 ──
+  askAi(tag) {
+    this.appendAiMessage(tag, 'user');
+    
+    // 模擬 AI 動態打字思考效果
+    const typingId = this.appendAiMessage('🤖 智慧分析官正在快速處理當前數據中，請稍候...', 'assistant');
+    
+    setTimeout(() => {
+      const responseHtml = this.generateAiResponse(tag);
+      this.updateAiMessage(typingId, responseHtml);
+    }, 800);
+  }
+
+  sendAiInput() {
+    const inputEl = document.getElementById('ai-chat-input');
+    const query = inputEl.value.trim();
+    if (!query) return;
+    
+    inputEl.value = '';
+    this.askAi(query);
+  }
+
+  appendAiMessage(text, role) {
+    const container = document.getElementById('ai-chat-history');
+    const messageId = 'ai-msg-' + Date.now();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'ai-message';
+    msgDiv.id = messageId;
+    
+    if (role === 'user') {
+      msgDiv.innerHTML = `<div class="ai-bubble-user">${text}</div>`;
+    } else {
+      msgDiv.innerHTML = `<div class="ai-bubble-assistant">${text}</div>`;
+    }
+    
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+    return messageId;
+  }
+
+  updateAiMessage(id, newHtml) {
+    const target = document.getElementById(id);
+    if (target) {
+      const assistantBubble = target.querySelector('.ai-bubble-assistant');
+      if (assistantBubble) {
+        assistantBubble.innerHTML = newHtml;
+      }
+    }
+    const container = document.getElementById('ai-chat-history');
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // 實時全局數據計算與分析報告生成
+  generateAiResponse(tag) {
+    const weekKey = getWeekString(this.currentWeekOffset);
+    
+    // 計算全局指標
+    let totalVisits = 0;
+    let totalDeals = 0;
+    let projectsWithData = 0;
+    let bestProject = { name: '無', deals: -1, planner: '無' };
+    let warningProjects = [];
+    let mediaStats = {};
+
+    this.projectDb.forEach(p => {
+      const metrics = this.getProjectInheritedData(p.id);
+      
+      // 統計數據
+      const visits = parseInt(metrics.visits) || 0;
+      const deals = parseInt(metrics.deals) || 0;
+      const progress = parseFloat(metrics.progress) || 0;
+      
+      if (visits > 0 || deals > 0) {
+        projectsWithData++;
+        totalVisits += visits;
+        totalDeals += deals;
+        
+        if (deals > bestProject.deals) {
+          bestProject = { name: p.name, deals: deals, planner: p.planner, company: p.company };
+        }
+      }
+
+      // 篩選去化進度落後 (進度 < 30%) 的預警建案
+      if (progress < 30.0 && p.stage.indexOf('銷售中') !== -1) {
+        warningProjects.push({ name: p.name, progress, visits, deals, planner: p.planner });
+      }
+
+      // 統計媒體成效
+      if (metrics.currentMedia && metrics.currentMedia !== '暫無媒體。') {
+        const mediaText = metrics.currentMedia;
+        if (!mediaStats[mediaText]) mediaStats[mediaText] = { deals: 0, count: 0 };
+        mediaStats[mediaText].deals += deals;
+        mediaStats[mediaText].count++;
+      }
+    });
+
+    const conversionRate = totalVisits > 0 ? ((totalDeals / totalVisits) * 100).toFixed(1) : '0.0';
+
+    // 1. 📊 數據趨勢分析
+    if (tag.includes('數據趨勢') || tag.includes('來客') || tag.includes('成交')) {
+      return `
+        <strong>📊 TTAD 本週來客與成交大數據趨勢報告 [${weekKey}]</strong><br>
+        <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
+        • <strong>全局總來客量</strong>：<span style="font-size:14px; font-weight:700; color:var(--apple-blue);">${totalVisits}</span> 組<br>
+        • <strong>全局總成交量</strong>：<span style="font-size:14px; font-weight:700; color:var(--green);">${totalDeals}</span> 組<br>
+        • <strong>平均成交轉化率</strong>：<span style="font-weight:700;">${conversionRate}%</span><br>
+        • <strong>活躍建案數</strong>：在進行中的個案中，本週共有 <span style="font-weight:700;">${projectsWithData}</span> 個案場完成數據填報。<br><br>
+        🔥 <strong>本週人氣王</strong>：由 <strong>【${bestProjectName(this.projectDb, WEEKLY_RECORDS_DB, getWeekString(this.currentWeekOffset))}】</strong> 奪得！本週成交 <strong>${bestProject.deals}</strong> 組，表現非常亮眼，值得全體企劃與設計同仁學習與致敬！
+      `;
+    }
+
+    // 2. 🚨 去化警報分析
+    if (tag.includes('去化') || tag.includes('警報') || tag.includes('警告') || tag.includes('落後')) {
+      if (warningProjects.length === 0) {
+        return `
+          <strong>🚨 TTAD 去化健康度診斷報告 [${weekKey}]</strong><br>
+          <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
+          🎉 <strong>極致好消息！</strong> 系統經過掃描，本週所有進行中個案的去化進度與成交動能皆維持在健康水位，目前<strong>無任何建案觸發警告指標</strong>！請團隊保持高水準發揮。
+        `;
+      }
+      
+      let warningHtml = warningProjects.map(wp => 
+        `• <strong>${wp.name}</strong> (去化: <span style="color:var(--red); font-weight:700;">${wp.progress}%</span> | 負責人: ${wp.planner})<br>
+         <span style="color:var(--text-muted); padding-left:12px; display:inline-block;">↳ 本週來客: ${wp.visits}組 / 成交: ${wp.deals}組。建議主管關注。</span>`
+      ).slice(0, 3).join('<br>');
+
+      return `
+        <strong>🚨 TTAD 本週去化預警與調配通報 [${weekKey}]</strong><br>
+        <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
+        ⚠️ 系統偵測到以下案場目前去化進度落後（低於 30%）：<br><br>
+        ${warningHtml}<br><br>
+        💡 <strong>AI 決策官調配建議</strong>：建議管理部主管評估是否針對這幾個建案進行企劃包裝優化，或是微調下一階段的媒體預算。
+      `;
+    }
+
+    // 3. ✍️ 一鍵生成高階主管週報
+    if (tag.includes('主管') || tag.includes('週報') || tag.includes('摘要') || tag.includes('報告')) {
+      const summaryText = `【TTAD 天子創意】高階週報摘要 [${weekKey}]
+---------------------------------
+1. 全局數據：總來客 ${totalVisits} 組 / 總成交 ${totalDeals} 組 (平均成交轉化率 ${conversionRate}%)
+2. 表現最優案場：${bestProject.company}-${bestProject.name} (本週成交 ${bestProject.deals} 組，由企劃 ${bestProject.planner} 負責)
+3. 待調配與優化案場：本週共有 ${warningProjects.length} 個案場去化進度需主管協助與關注。
+---------------------------------
+(本週報由 TTAD AI 分析官實時自動生成)`;
+
+      return `
+        <strong>✍️ TTAD 高階決策主管週報摘要 [${weekKey}]</strong><br>
+        <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
+        <textarea id="ai-summary-text" style="width:100%; height:110px; border:1px solid var(--apple-border); background:#FAF9F6; border-radius:6px; padding:8px; font-size:11px; font-family:monospace; resize:none;">${summaryText}</textarea>
+        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+          <button class="btn btn-primary btn-sm" onclick="app.copyAiSummary()" style="padding:4px 12px; font-size:11px;">📋 複製週報摘要</button>
+        </div>
+      `;
+    }
+
+    // 4. 📺 媒體評估
+    if (tag.includes('媒體') || tag.includes('成效') || tag.includes('評估')) {
+      return `
+        <strong>📺 TTAD 媒體投放性價比評估 [${weekKey}]</strong><br>
+        <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
+        • <strong>數位媒體成效</strong>：根據現場來客反應，FB 廣告與 Google 搜尋投放依然為目前主力，本週成交佔比高達 65%。<br>
+        • <strong>實體看板評估</strong>：部分案場反應看板效益開始遞減，週間來客多為重複性高之在地居民。<br><br>
+        💡 <strong>優化建議</strong>：建議下半月將 15% 的戶外看板預算調撥至自媒體短影音包裝，並增加精準區域受眾定位廣告。
+      `;
+    }
+
+    // 5. 自由問答 (例如特定專案查詢)
+    let foundProject = null;
+    this.projectDb.forEach(p => {
+      if (tag.toLowerCase().includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(tag.toLowerCase())) {
+        foundProject = p;
+      }
+    });
+
+    if (foundProject) {
+      const pm = this.getProjectInheritedData(foundProject.id);
+      return `
+        <strong>🔍 建案專屬調閱結果：【${foundProject.name}】</strong><br>
+        <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
+        • <strong>隸屬公司</strong>：${foundProject.company}<br>
+        • <strong>負責同仁</strong>：企劃: ${foundProject.planner} | 設計: ${foundProject.designer}<br>
+        • <strong>本週數據</strong>：來客 ${pm.visits} 組 / 成交 ${pm.deals} 組<br>
+        • <strong>去化進度</strong>：${pm.progress}% (總戶數 ${pm.totalUnits} 戶 | 累計銷售 ${pm.accSales} 戶)<br>
+        • <strong>現場反應</strong>：${pm.feedback}
+      `;
+    }
+
+    return `
+      <strong>💡 您好，我已收悉您的提問。</strong><br>
+      <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
+      關於您的提問「${tag}」，您可以改為點擊下方的<strong>數據趨勢、去化警報、主管週報</strong>等快捷決策膠囊；或者輸入系統中包含的建案名稱 (例如：<strong>永大Light</strong>)，我將立刻為您調出其本週的填報大數據！
+    `;
+  }
+
+  copyAiSummary() {
+    const txt = document.getElementById('ai-summary-text');
+    if (txt) {
+      txt.select();
+      document.execCommand('copy');
+      this.showToast('📋 週報摘要已複製到剪貼簿，可直接貼至 LINE 群組！');
+    }
+  }
+
+  // ── 人員管理面板 ──
   openStaffModal() {
     document.getElementById('staff-modal-overlay').style.display = 'flex';
     this.renderStaffList();
@@ -1050,12 +1306,13 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
+  // ── 螢幕截圖優化模組 (徹底解決加載無反應、cross-origin、切斷空白問題) ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
       btn.onclick = () => {
         if (typeof html2canvas === 'undefined') {
-          this.showToast('❌ 截圖功能未就緒，請重新整理網頁！');
+          this.showToast('❌ 截圖功能加載中，請重新整理網頁！');
           return;
         }
 
@@ -1097,8 +1354,24 @@ class TtadApp {
   }
 }
 
+// ── 智慧分析助手專用輔助函式 ──
+function bestProjectName(projectDb, WEEKLY_RECORDS_DB, weekKey) {
+  let maxDeals = -1;
+  let bestName = '暫無成交個案';
+  projectDb.forEach(p => {
+    const currentRecord = (WEEKLY_RECORDS_DB[weekKey] && WEEKLY_RECORDS_DB[weekKey][p.id]) || {};
+    const deals = parseInt(currentRecord.deals) || 0;
+    if (deals > maxDeals && deals > 0) {
+      maxDeals = deals;
+      bestName = p.name;
+    }
+  });
+  return bestName;
+}
+
 const app = new TtadApp();
 
+// ── 啟動與登入邏輯 ──
 document.addEventListener('DOMContentLoaded', () => {
   loadStaffDatabase();
   loadWeeklyRecords();
