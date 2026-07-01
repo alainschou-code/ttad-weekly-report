@@ -526,7 +526,7 @@ function showConfirm(message, onConfirm) {
   document.getElementById('confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
 }
 
-// ── STREAMING_CHUNK: Implementing intelligent multi-week data inheritance logic... ──
+// ── STREAMING_CHUNK: Implementing TtadApp class core methods... ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
@@ -729,7 +729,6 @@ class TtadApp {
     this.renderProjectList();
   }
 
-  // 智慧跨週繼承核心 (自動追溯過去填寫過的最深 12 週記錄)
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
     const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
@@ -907,7 +906,6 @@ class TtadApp {
 
   closeDataModal() { document.getElementById('data-entry-modal').style.display = 'none'; }
 
-  // 填報數據存檔：導入 synchronous await 強制即刻儲存並推送雲端，完美排除時間差
   async saveDataEntry() {
     const saveBtn = document.getElementById('btn-save-entry');
     const origText = saveBtn.innerHTML;
@@ -995,7 +993,6 @@ class TtadApp {
     this.pushDataToCloud();
   }
 
-  // 背景發送：自動推送本週總表至雲端資料夾 (無感傳輸相容模式)
   async pushDataToCloud() {
     if (!CLOUD_API_URL) return false;
     
@@ -1440,7 +1437,8 @@ class TtadApp {
   }
 }
 
-const app = new T导App || new TtadApp();
+// ── STREAMING_CHUNK: Initializing TtadApp on DOMContentLoaded... ──
+const app = new TtadApp();
 
 // ── 啟動與登入邏輯 ──
 document.addEventListener('DOMContentLoaded', () => {
