@@ -258,6 +258,11 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </div>
 </div>
 
+<style>
+.ai-bubble-user { background: var(--apple-blue); color: white; padding: 10px 14px; border-radius: 14px 14px 2px 14px; align-self: flex-end; max-width: 85%; font-size: 12px; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,102,204,0.15); margin-left: auto; }
+.ai-bubble-assistant { background: white; color: var(--text-main); padding: 12px 16px; border-radius: 14px 14px 14px 2px; align-self: flex-start; max-width: 85%; font-size: 12px; line-height: 1.6; border: 1px solid var(--apple-border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+</style>
+
 <!-- ══════════════ 3. 人員編輯管理彈窗 ══════════════ -->
 <div class="modal-overlay" id="staff-modal-overlay">
   <div class="modal-container">
@@ -583,7 +588,6 @@ class TtadApp {
       const text = await resp.text();
       const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
       
-      let totalSalesColIdx = -1;
       let isRow0Header = false;
       let headers = [];
 
@@ -603,14 +607,6 @@ class TtadApp {
         }
       }
 
-      // 2. 搜尋試算表中的「總銷」或「總銷金額」欄位做預設值對齊
-      if (headers.length > 0) {
-        totalSalesColIdx = headers.findIndex(h => {
-          const clean = h.replace(/\s+/g, '');
-          return clean.includes('總銷') || clean.includes('銷額') || clean.includes('銷售金額');
-        });
-      }
-
       const dataRows = isRow0Header ? json.table.rows.slice(1) : json.table.rows;
 
       this.projectDb = dataRows.map((r, index) => {
@@ -626,12 +622,7 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        let sheetTotalSalesVal = '';
-        if (totalSalesColIdx !== -1) {
-          sheetTotalSalesVal = getCell(totalSalesColIdx);
-        }
-
-        // 採用不重複之複合唯一金鑰，避免婉菁更動排序後對位錯誤
+        // 採用不重複之複合唯一金鑰，避免排序後對位錯誤
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
@@ -642,8 +633,7 @@ class TtadApp {
           name: prjName,
           stage: getCell(3), // D欄 狀態
           planner: sanitizeName(getCell(7)), // H欄 負責企劃
-          designer: sanitizeName(getCell(8)), // I欄 負責設計
-          sheetTotalSales: sheetTotalSalesVal
+          designer: sanitizeName(getCell(8)) // I欄 負責設計
         };
       });
 
@@ -834,8 +824,8 @@ class TtadApp {
       const metrics = this.getProjectInheritedData(p.id);
       const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
-      // 智慧融合：前台手填總銷優於 Google 總表總銷
-      const displaySales = metrics.totalSales || p.sheetTotalSales || '未填';
+      // 總銷金額高雅靠右並列呈現
+      const displaySales = metrics.totalSales || '未填';
 
       return `
         <div class="project-card">
@@ -899,7 +889,6 @@ class TtadApp {
     document.getElementById('entry-project-id').value = id;
 
     const metrics = this.getProjectInheritedData(id);
-    const pj = this.projectDb.find(p => p.id === id);
 
     document.getElementById('entry-visits').value = metrics.visits || '';
     document.getElementById('entry-deals').value = metrics.deals || '';
@@ -907,7 +896,7 @@ class TtadApp {
     document.getElementById('entry-feedback').value = metrics.feedback === '暫無反應。' ? '' : metrics.feedback;
     document.getElementById('entry-current-media').value = metrics.currentMedia === '暫無媒體。' ? '' : metrics.currentMedia;
     document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
-    document.getElementById('entry-total-sales').value = metrics.totalSales || pj.sheetTotalSales || '';
+    document.getElementById('entry-total-sales').value = metrics.totalSales || '';
 
     // 🔓 已取消總戶數強行帶入鎖定，將編輯權限完全歸還予同仁自由填寫
     const totalUnitsInput = document.getElementById('entry-total-units');
