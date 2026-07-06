@@ -7,8 +7,7 @@
 
 <!-- 外部核心 SDK -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js" async defer></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
 <style>
 :root {
@@ -51,7 +50,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .apple-input-box input, .apple-input-box select { width: 100%; border: none; background: transparent; padding: 12px 16px; font-size: 13px; outline: none; font-family: var(--font); color: var(--text-main); }
 .apple-input-box select { -webkit-appearance: none; cursor: pointer; }
 
-/* ── 主系統狀態列 ── */
 .topbar { background: rgba(255, 255, 255, 0.85); backdrop-filter: saturate(180%) blur(20px); height: 64px; border-bottom: 1px solid var(--apple-border); position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
 .brand-title { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
 
@@ -75,7 +73,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .pill-btn:hover { background: #E8E8ED; }
 .pill-btn.active { background: var(--text-main); color: #FFFFFF; border-color: var(--text-main); }
 
-/* 個案卡片 */
 .project-card { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; display: grid; grid-template-columns: 320px 1.1fr 1.2fr; gap: 36px; box-shadow: var(--shadow-sm); transition: transform 0.2s; }
 .pj-company { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
 .pj-name { font-size: 20px; font-weight: 700; color: var(--text-main); }
@@ -111,6 +108,9 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .btn-ghost:hover { background: rgba(0,0,0,0.04); color: var(--text-main); }
 .btn-capsule { border-radius: 99px; background: #E8E8ED; color: var(--text-main); }
 .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 20px; font-size: 12px; z-index: 99999; display: none; backdrop-filter: blur(10px); }
+
+.ai-bubble-user { background: var(--apple-blue); color: white; padding: 10px 14px; border-radius: 14px 14px 2px 14px; align-self: flex-end; max-width: 85%; font-size: 12px; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,102,204,0.15); margin-left: auto; }
+.ai-bubble-assistant { background: white; color: var(--text-main); padding: 12px 16px; border-radius: 14px 14px 14px 2px; align-self: flex-start; max-width: 85%; font-size: 12px; line-height: 1.6; border: 1px solid var(--apple-border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
 </style>
 </head>
 <body>
@@ -129,10 +129,10 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
     </div>
 
     <label class="section-micro-label">FULL NAME (姓名全名)</label>
-    <div class="apple-input-box"><input type="text" id="apple-user-fullname" placeholder="例：翁淳豪"></div>
+    <div class="apple-input-box"><input type="text" id="apple-user-fullname" placeholder="例：周于堯"></div>
 
     <label class="section-micro-label">GMAIL ADDRESS (電子信箱)</label>
-    <div class="apple-input-box"><input type="email" id="apple-user-email" placeholder="name@ttad.com.tw"></div>
+    <div class="apple-input-box"><input type="email" id="apple-user-email" placeholder="alains.chou@gmail.com"></div>
     
     <label class="section-micro-label">DATE OF ENTRY (入職年月)</label>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
@@ -259,11 +259,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   </div>
 </div>
 
-<style>
-.ai-bubble-user { background: var(--apple-blue); color: white; padding: 10px 14px; border-radius: 14px 14px 2px 14px; align-self: flex-end; max-width: 85%; font-size: 12px; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,102,204,0.15); margin-left: auto; }
-.ai-bubble-assistant { background: white; color: var(--text-main); padding: 12px 16px; border-radius: 14px 14px 14px 2px; align-self: flex-start; max-width: 85%; font-size: 12px; line-height: 1.6; border: 1px solid var(--apple-border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-</style>
-
 <!-- ══════════════ 3. 人員編輯管理彈窗 ══════════════ -->
 <div class="modal-overlay" id="staff-modal-overlay">
   <div class="modal-container">
@@ -276,7 +271,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       <div class="staff-form-row">
         <div class="form-group">
           <label class="form-label" style="font-size:10px; font-weight:700; margin-bottom: 4px; display:block;">姓名全名</label>
-          <input type="text" id="m-staff-name" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="例：翁淳豪">
+          <input type="text" id="m-staff-name" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="例：周于堯">
         </div>
         <div class="form-group">
           <label class="form-label" style="font-size:10px; font-weight:700; margin-bottom: 4px; display:block;">Gmail 帳號</label>
@@ -403,6 +398,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
 <div id="toast" class="toast"></div>
 
+<!-- ══════════════ 6. 系統核心 JavaScript 運作邏輯 ══════════════ -->
 <script>
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1h1M0aYwS8nwEgUnlpBXj1rxWbEbzhvSfZzB5NHbcS20/gviz/tq?gid=1006460624';
 const ADMIN_WHITELIST = ['alains.chou@gmail.com', 'yuhsia0911@gmail.com'];
@@ -443,7 +439,8 @@ function loadWeeklyRecords() {
   if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
 }
 
-const sanitizeName = (str) => str ? String(str).replace(/\s+/g, '') : '';
+// 升級過的姓名與識別碼安全過濾器：全面剔除空格與所有種類之引號 `'"` 以及反單引號
+const sanitizeName = (str) => str ? String(str).replace(/[\s'"`]/g, '') : '';
 
 // 智慧日期區間解析 (產出 W26 (06/22 ~ 06/28) 格式)
 function getWeekString(offset = 0) {
@@ -526,7 +523,7 @@ function showConfirm(message, onConfirm) {
   document.getElementById('confirm-ok').onclick = () => { overlay.remove(); onConfirm(); };
 }
 
-// ── STREAMING_CHUNK: Implementing TtadApp class core methods... ──
+// ── 主系統 TtadApp 核心控制器 ──
 class TtadApp {
   constructor() {
     this.projectDb = [];
@@ -618,7 +615,7 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 採用不重複之複合永久唯一金鑰，避免排序後對位錯誤
+        // 採用不重複之複合永久唯一金鑰，避免排序後對位錯誤。在產生ID時，過濾器會去除單引號 ' 防止語法錯誤
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
@@ -827,6 +824,7 @@ class TtadApp {
       const metrics = this.getProjectInheritedData(p.id);
       const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
+      // 關鍵點：onclick 僅傳遞經過 sanitize 的穩定 id 變數，完全不傳遞中文、英文字元，避免 L'ART 等單引號造成語法閃退
       return `
         <div class="project-card">
           <!-- 左側建案元資訊 -->
@@ -849,7 +847,7 @@ class TtadApp {
 
           <!-- 填報按鈕 -->
           <div style="display:flex; align-items:center; justify-content:flex-end;">
-            <button class="btn btn-primary" onclick="app.openDataModal('${p.id}', '${p.company}-${p.name}')">填報數據</button>
+            <button class="btn btn-primary" onclick="app.openDataModal('${p.id}')">填報數據</button>
           </div>
 
           <!-- 下方四格填報資訊 -->
@@ -879,7 +877,12 @@ class TtadApp {
   }
 
   // ── 數據填報彈窗 ──
-  openDataModal(id, title) {
+  openDataModal(id) {
+    // 智慧內部反查，避免 inline 屬性中斷
+    const project = this.projectDb.find(p => p.id === id);
+    if (!project) return;
+
+    const title = `${project.company}-${project.name}`;
     document.getElementById('data-entry-modal').style.display = 'flex';
     document.getElementById('data-modal-title').textContent = `填報數據 ➔ ${title}`;
     document.getElementById('entry-project-id').value = id;
@@ -894,7 +897,7 @@ class TtadApp {
     document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
     document.getElementById('entry-total-sales').value = metrics.totalSales || '';
 
-    // 🔓 總戶數編輯完全歸還予同仁自由填寫
+    // 🔓 總戶數編輯完全歸還予人員自行填寫
     const totalUnitsInput = document.getElementById('entry-total-units');
     totalUnitsInput.value = metrics.totalUnits || '';
     totalUnitsInput.readOnly = false;
@@ -1437,10 +1440,9 @@ class TtadApp {
   }
 }
 
-// ── STREAMING_CHUNK: Initializing TtadApp on DOMContentLoaded... ──
+// ── 啟動與登入邏輯 ──
 const app = new TtadApp();
 
-// ── 啟動與登入邏輯 ──
 document.addEventListener('DOMContentLoaded', () => {
   loadStaffDatabase();
   loadWeeklyRecords();
