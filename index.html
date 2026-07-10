@@ -55,7 +55,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .brand-title { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
 
 .user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
-.badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap !important; word-break: keep-all !important; display: inline-block !important; }
+.badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap !important; word-break: keep-all !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 22px; line-height: 1 !important; }
 
 /* ── 內容區 ── */
 .app-container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
@@ -86,22 +86,24 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   gap: 36px; 
   box-shadow: var(--shadow-sm); 
   transition: transform 0.2s; 
-  transform: translateZ(0); /* 啟用硬體加速渲染內容 */
+  transform: translateZ(0); 
 }
 
-/* 經典 html2canvas 跑版修補程序：禁止徽章與案名被截圖引擎壓縮 */
+/* 經典 html2canvas 跑版修補：極致文字居中對齊樣式 */
 .badge-tag { 
   background: #E8E8ED; 
   color: var(--text-main); 
   font-size: 11px; 
-  padding: 3px 8px; 
+  padding: 0 10px; 
   border-radius: 6px; 
   font-weight: 600; 
-  margin-right: 6px; 
-  display: inline-block !important; 
+  display: inline-flex !important; 
+  align-items: center !important; 
+  justify-content: center !important; 
   white-space: nowrap !important; 
   word-break: keep-all !important; 
-  vertical-align: middle;
+  height: 22px;
+  line-height: 1 !important;
 }
 
 .pj-company { 
@@ -386,7 +388,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
         </div>
       </div>
 
-      <!-- 新增總銷金額欄位，允許企劃人員自行填報 -->
+      <!-- 總銷金額欄位 -->
       <div class="form-group" style="margin-bottom:16px;">
         <label class="form-label" style="font-weight:700; display:block; margin-bottom:4px;">總銷金額 (例如: 15億 / 12000萬)</label>
         <input type="text" id="entry-total-sales" class="form-input" style="width:100%; border:1px solid var(--apple-border); padding:8px; border-radius:6px;" placeholder="請輸入本案總銷金額">
@@ -485,10 +487,10 @@ function loadWeeklyRecords() {
   if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
 }
 
-// 升級姓名過濾器：全面剔除空格與所有種類之引號 `'"` 以及反單引號
+// 升級姓名過濾：剔除空格與所有種類之引號及反單引號
 const sanitizeName = (str) => str ? String(str).replace(/[\s'"`]/g, '') : '';
 
-// 智慧日期區間解析 (產出 W26 (06/22 ~ 06/28) 格式)
+// 智慧日期區間解析
 function getWeekString(offset = 0) {
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + (offset * 7));
@@ -661,18 +663,18 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 採用不重複之複合永久唯一金鑰，避免排序後對位錯誤。在產生ID時，過濾器會去除單引號 ' 防止語法錯誤
+        // 採用複合永久唯一金鑰，避免排序錯位。剔除引號，避免 onclick 崩潰
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
           id: stableId,
-          category: getCell(0), // A欄 類別
-          location: getCell(1), // B欄 區域地址
+          category: getCell(0), 
+          location: getCell(1), 
           company: company,
           name: prjName,
-          stage: getCell(3), // D欄 狀態
-          planner: sanitizeName(getCell(7)), // H欄 負責企劃
-          designer: sanitizeName(getCell(8)) // I欄 負責設計
+          stage: getCell(3), 
+          planner: sanitizeName(getCell(7)), 
+          designer: sanitizeName(getCell(8)) 
         };
       });
 
@@ -751,7 +753,7 @@ class TtadApp {
   }
 
   switchToFrontend() { 
-    this.currentDept = '企劃部'; // 暫時切換
+    this.currentDept = '企劃部'; 
     document.getElementById('admin-panel').style.display = 'none'; 
     const backBtn = document.getElementById('btn-back-to-admin');
     if (backBtn) {
@@ -870,16 +872,19 @@ class TtadApp {
       const metrics = this.getProjectInheritedData(p.id);
       const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
-      // 採用 100% 穩固的 Block / inline-block 與 nowrap，避免在 html2canvas 中縮放跑版與字體重疊
+      // 採用極致 inline-flex、等高及 text-span 設計，確保 html2canvas 對齊完美不位移
       return `
         <div class="project-card">
           <!-- 左側建案元資訊 -->
           <div style="display: block; text-align: left;">
             <div class="pj-company">${p.company}</div>
             <div class="pj-name">${p.name}</div>
-            <div style="display: block; margin-bottom: 12px; line-height: 1.5;">
-              <span class="badge-tag" style="background:${categoryColor}; color:white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block !important; white-space: nowrap !important; word-break: keep-all !important; vertical-align: middle;">${p.category}</span>
-              <span style="font-size:11px; color:var(--text-muted); display: inline-block !important; white-space: nowrap !important; vertical-align: middle; margin-left: 6px;">📍 ${p.location}</span>
+            <div style="display: flex !important; align-items: center !important; gap: 8px; margin-bottom: 12px; height: 24px;">
+              <span class="badge-tag" style="background:${categoryColor}; color:white; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 10px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap !important; word-break: keep-all !important; height: 22px; line-height: 1 !important;">${p.category}</span>
+              <span style="font-size:11px; color:var(--text-muted); display: inline-flex !important; align-items: center !important; height: 22px; line-height: 1 !important; white-space: nowrap !important; gap: 4px;">
+                <span style="display: inline-block;">📍</span>
+                <span style="display: inline-block;">${p.location}</span>
+              </span>
             </div>
             <div style="font-size:11px; color:var(--text-muted); display: block; line-height: 1.4;">👤 企劃: ${p.planner} ｜ 🎨 設計: ${p.designer} ｜ 狀態: ${p.stage}</div>
           </div>
@@ -924,7 +929,6 @@ class TtadApp {
 
   // ── 數據填報彈窗 ──
   openDataModal(id) {
-    // 智慧內部反查，避免 inline 屬性中斷
     const project = this.projectDb.find(p => p.id === id);
     if (!project) return;
 
@@ -943,7 +947,7 @@ class TtadApp {
     document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
     document.getElementById('entry-total-sales').value = metrics.totalSales || '';
 
-    // 🔓 總戶數編輯完全歸還予人員自行填寫
+    // 解鎖總戶數供同仁自由編輯
     const totalUnitsInput = document.getElementById('entry-total-units');
     totalUnitsInput.value = metrics.totalUnits || '';
     totalUnitsInput.readOnly = false;
@@ -979,7 +983,6 @@ class TtadApp {
 
     saveWeeklyRecords();
     
-    // 即時連線同步至雲端，避免任何資料遺落
     const cloudSuccess = await this.pushDataToCloud();
     
     saveBtn.disabled = false;
@@ -1411,13 +1414,12 @@ class TtadApp {
         // 插入到週報最頂部進行渲染
         element.insertBefore(headerDiv, element.firstChild);
 
-        // 智慧滾動緩衝機制：先強行滾動至頂部對齊，避免任何黑邊或排版死角
         const origScrollTop = window.scrollY;
         window.scrollTo(0, 0);
 
         this.showToast('📸 正在處理 Canvas 導出（2/2），即將下載...');
 
-        // 補上 120ms 延遲阻斷，確保 Safari 完成滾動定位與繪製
+        // 補上延遲阻斷，確保 Safari 完成滾動定位
         setTimeout(() => {
           try {
             // 智慧自適應比例計算以避免 iOS Safari 3.2MB 記憶體限制
@@ -1426,8 +1428,7 @@ class TtadApp {
             const height = rect.height || 1000;
             const totalPixels = width * height;
             
-            // Safari 預算上限設為極安全之 3,200,000 像素
-            let calculatedScale = 1.8; // 高解析度預設
+            let calculatedScale = 1.8; 
             const maxSafePixels = 3200000;
             if (totalPixels * (calculatedScale * calculatedScale) > maxSafePixels) {
               calculatedScale = Math.sqrt(maxSafePixels / totalPixels);
@@ -1442,11 +1443,9 @@ class TtadApp {
               logging: false,
               backgroundColor: '#F5F5F7'
             }).then(canvas => {
-              // 立即還原 scroll 位置並拆除動態 Banner，不干擾介面
               window.scrollTo(0, origScrollTop); 
               headerDiv.remove();
 
-              // Canvas 防呆保護
               if (!canvas || canvas.width === 0 || canvas.height === 0) {
                 throw new Error("繪製畫布為空，可能是設備記憶體不足");
               }
@@ -1456,13 +1455,11 @@ class TtadApp {
                 throw new Error("Canvas 導出受瀏覽器安全性限制阻擋");
               }
 
-              // 下載鏈接
               const link = document.createElement('a');
               const weekKey = getWeekString(this.currentWeekOffset);
               link.download = `[天子創意]_${this.currentStaffName}_週報_${weekKey}.png`;
               link.href = imgData;
               
-              // 補上 iOS Safari 必須的 DOM 附加下載流程
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
