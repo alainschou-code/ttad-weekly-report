@@ -30,7 +30,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--apple-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.5; }
 
-/* ── 登入介面 ── */
 #login-screen { position: fixed; inset: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .apple-login-container { width: 100%; max-width: 360px; text-align: center; padding: 32px 24px; }
 .brand-headline { font-size: 28px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-main); margin-bottom: 8px; }
@@ -55,7 +54,24 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .brand-title { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
 
 .user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
-.badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap !important; word-break: keep-all !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 22px; line-height: 1 !important; }
+
+.badge-dept { 
+  background: var(--text-main) !important; 
+  color: #FFFFFF !important; 
+  font-size: 11px !important; 
+  font-weight: 600 !important; 
+  display: inline-block !important; 
+  text-align: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important; 
+  word-break: keep-all !important; 
+  height: 22px !important; 
+  line-height: 22px !important; 
+  padding: 0 10px !important;
+  border-radius: 99px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
 
 /* ── 內容區 ── */
 .app-container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
@@ -89,21 +105,23 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   transform: translateZ(0); 
 }
 
-/* 經典 html2canvas 跑版修補：極致文字居中對齊樣式 */
+/* 經典 html2canvas 跑版修補：極致物理等高居中對齊樣式 */
 .badge-tag { 
-  background: #E8E8ED; 
-  color: var(--text-main); 
-  font-size: 11px; 
-  padding: 0 10px; 
-  border-radius: 6px; 
-  font-weight: 600; 
-  display: inline-flex !important; 
-  align-items: center !important; 
-  justify-content: center !important; 
+  background: #E8E8ED !important; 
+  color: var(--text-main) !important; 
+  font-size: 11px !important; 
+  font-weight: 600 !important; 
+  display: inline-block !important; 
+  text-align: center !important; 
+  vertical-align: middle !important; 
   white-space: nowrap !important; 
   word-break: keep-all !important; 
-  height: 22px;
-  line-height: 1 !important;
+  height: 22px !important; 
+  line-height: 22px !important; 
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .pj-company { 
@@ -147,13 +165,37 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .staff-list-name { font-weight: 600; }
 .staff-list-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
-.btn-primary { background: var(--apple-blue); color: white; }
-.btn-primary:hover { background: var(--apple-blue-hover); }
-.btn-secondary { background: #E8E8ED; color: var(--text-main); }
-.btn-ghost { background: transparent; color: var(--text-muted); }
-.btn-ghost:hover { background: rgba(0,0,0,0.04); color: var(--text-main); }
-.btn-capsule { border-radius: 99px; background: #E8E8ED; color: var(--text-main); }
+.btn { 
+  display: inline-block !important; 
+  text-align: center !important; 
+  vertical-align: middle !important; 
+  white-space: nowrap !important; 
+  word-break: keep-all !important;
+  cursor: pointer !important; 
+  border: none !important; 
+  transition: all 0.15s !important; 
+  font-weight: 600 !important; 
+  height: 36px !important;
+  line-height: 36px !important;
+  padding: 0 18px !important;
+  border-radius: 8px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+.btn-primary { background: var(--apple-blue) !important; color: white !important; }
+.btn-primary:hover { background: var(--apple-blue-hover) !important; }
+.btn-secondary { background: #E8E8ED !important; color: var(--text-main) !important; }
+.btn-ghost { background: transparent !important; color: var(--text-muted) !important; line-height: 36px !important; }
+.btn-ghost:hover { background: rgba(0,0,0,0.04) !important; color: var(--text-main) !important; }
+.btn-capsule { border-radius: 99px !important; background: #E8E8ED !important; color: var(--text-main) !important; }
+
+.btn-sm {
+  height: 28px !important;
+  line-height: 28px !important;
+  padding: 0 12px !important;
+  font-size: 11px !important;
+}
+
 .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 20px; font-size: 12px; z-index: 99999; display: none; backdrop-filter: blur(10px); }
 
 .ai-bubble-user { background: var(--apple-blue); color: white; padding: 10px 14px; border-radius: 14px 14px 2px 14px; align-self: flex-end; max-width: 85%; font-size: 12px; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,102,204,0.15); margin-left: auto; }
@@ -191,7 +233,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       </select></div>
     </div>
 
-    <button class="btn btn-primary" style="width: 100%; padding: 14px; border-radius: 12px;" onclick="handlePasscodeLogin()">驗證並進入系統</button>
+    <button class="btn btn-primary" style="width: 100%; height: 46px; line-height: 46px; padding: 0; border-radius: 12px;" onclick="handlePasscodeLogin()">驗證並進入系統</button>
   </div>
 </div>
 
@@ -216,7 +258,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       
       <div class="user-meta-card">
         <span id="user-name" class="meta-name">--</span>
-        <span id="user-dept" class="badge badge-dept">--</span>
+        <span id="user-dept" class="badge-dept">--</span>
         <span id="user-tenure" class="meta-tenure">--</span>
       </div>
     </div>
@@ -240,7 +282,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
             <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">主管權限：全系統數據透視與人員排班狀態管理</span>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="app.switchToFrontend()" style="background: var(--apple-blue); border-radius: 10px; padding: 10px 20px; font-size: 12px;">
+        <button class="btn btn-primary" onclick="app.switchToFrontend()" style="background: var(--apple-blue); border-radius: 10px; padding: 0 20px; font-size: 12px;">
           前往前台視角
         </button>
       </div>
@@ -287,16 +329,16 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
           <!-- 快捷智慧膠囊組 -->
           <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
-            <button class="btn btn-capsule btn-sm" onclick="app.askAi('📊 數據趨勢')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">📊 數據趨勢</button>
-            <button class="btn btn-capsule btn-sm" onclick="app.askAi('🚨 去化警報')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">🚨 去化警報</button>
-            <button class="btn btn-capsule btn-sm" onclick="app.askAi('✍️ 主管週報')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">✍️ 主管週報</button>
-            <button class="btn btn-capsule btn-sm" onclick="app.askAi('📺 媒體評估')" style="font-size: 11px; padding: 4px 10px; background:#FFFFFF; border:1px solid var(--apple-border);">📺 媒體評估</button>
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('📊 數據趨勢')" style="font-size: 11px; background:#FFFFFF; border:1px solid var(--apple-border);">📊 數據趨勢</button>
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('🚨 去化警報')" style="font-size: 11px; background:#FFFFFF; border:1px solid var(--apple-border);">🚨 去化警報</button>
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('✍️ 主管週報')" style="font-size: 11px; background:#FFFFFF; border:1px solid var(--apple-border);">✍️ 主管週報</button>
+            <button class="btn btn-capsule btn-sm" onclick="app.askAi('📺 媒體評估')" style="font-size: 11px; background:#FFFFFF; border:1px solid var(--apple-border);">📺 媒體評估</button>
           </div>
 
           <!-- 對話輸入欄位 -->
           <div style="display: flex; gap: 8px;">
             <input type="text" id="ai-chat-input" style="flex: 1; border: 1px solid var(--apple-border); padding: 10px 14px; border-radius: 10px; font-size: 12px; outline: none;" placeholder="問我任何事... 例如：永大Light這週狀況如何？" onkeydown="if(event.key==='Enter') app.sendAiInput()">
-            <button class="btn btn-primary" onclick="app.sendAiInput()" style="border-radius: 10px; padding: 0 16px;">發送</button>
+            <button class="btn btn-primary" onclick="app.sendAiInput()" style="border-radius: 10px; height: 38px; line-height: 38px;">發送</button>
           </div>
         </div>
       </div>
@@ -347,7 +389,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
             <option value="9">9 月入職</option><option value="10">10 月入職</option><option value="11">11 月入職</option><option value="12">12 月入職</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="app.addPersonnel()" style="height:35px;">新增同仁</button>
+        <button class="btn btn-primary" onclick="app.addPersonnel()" style="height:35px; line-height: 35px; padding: 0 16px;">新增同仁</button>
       </div>
       <hr style="border:0; border-top: 1px solid var(--apple-border); margin:16px 0;">
       <!-- 同仁列表 -->
@@ -487,7 +529,6 @@ function loadWeeklyRecords() {
   if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
 }
 
-// 升級姓名過濾：剔除空格與所有種類之引號及反單引號
 const sanitizeName = (str) => str ? String(str).replace(/[\s'"`]/g, '') : '';
 
 // 智慧日期區間解析
@@ -544,7 +585,7 @@ function showAlert(message) {
     <div style="background:white; border-radius:14px; padding:24px; max-width:320px; width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.08);">
       <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">系統提示</div>
       <div style="font-size:13px; color:var(--text-main); margin-bottom:20px; line-height:1.5;">${message}</div>
-      <button id="alert-ok" class="btn btn-primary" style="width:100%; border-radius:8px; padding:10px 0;">確定</button>
+      <button id="alert-ok" class="btn btn-primary" style="width:100%; border-radius:8px; height:36px; line-height: 36px; padding:0;">確定</button>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -561,8 +602,8 @@ function showConfirm(message, onConfirm) {
       <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">確認操作</div>
       <div style="font-size:13px; color:var(--text-main); margin-bottom:20px; line-height:1.5;">${message}</div>
       <div style="display:flex; gap:8px;">
-        <button id="confirm-cancel" class="btn btn-secondary" style="flex:1; border-radius:8px;">取消</button>
-        <button id="confirm-ok" class="btn btn-primary" style="flex:1; border-radius:8px; background:var(--red);">確定</button>
+        <button id="confirm-cancel" class="btn btn-secondary" style="flex:1; border-radius:8px; height: 36px; line-height: 36px; padding:0;">取消</button>
+        <button id="confirm-ok" class="btn btn-primary" style="flex:1; border-radius:8px; background:var(--red); height: 36px; line-height: 36px; padding:0;">確定</button>
       </div>
     </div>
   `;
@@ -870,22 +911,24 @@ class TtadApp {
 
     container.innerHTML = filtered.map(p => {
       const metrics = this.getProjectInheritedData(p.id);
-      const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
+      const categoryColor = p.category === '透天' ? '#FF9500' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
-      // 採用極致 inline-flex、等高及 text-span 設計，確保 html2canvas 對齊完美不位移
       return `
         <div class="project-card">
           <!-- 左側建案元資訊 -->
           <div style="display: block; text-align: left;">
             <div class="pj-company">${p.company}</div>
             <div class="pj-name">${p.name}</div>
-            <div style="display: flex !important; align-items: center !important; gap: 8px; margin-bottom: 12px; height: 24px;">
-              <span class="badge-tag" style="background:${categoryColor}; color:white; display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 0 10px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap !important; word-break: keep-all !important; height: 22px; line-height: 1 !important;">${p.category}</span>
-              <span style="font-size:11px; color:var(--text-muted); display: inline-flex !important; align-items: center !important; height: 22px; line-height: 1 !important; white-space: nowrap !important; gap: 4px;">
-                <span style="display: inline-block;">📍</span>
-                <span style="display: inline-block;">${p.location}</span>
+            
+            <!-- 採用絕對物理居中排版：高寬強制鎖定，完全擺脫彈性盒子(Flex)與表情符號產生的 html2canvas 錯位 -->
+            <div style="display: block !important; margin-bottom: 12px; height: 24px; line-height: 24px; white-space: nowrap !important;">
+              <span class="badge-tag" style="background:${categoryColor} !important; color:#FFFFFF !important; margin-right: 8px;">${p.category}</span>
+              
+              <span style="font-size:11px; color:var(--text-muted); display: inline-block !important; vertical-align: middle !important; height: 22px !important; line-height: 22px !important; white-space: nowrap !important; box-sizing: border-box !important;">
+                <span style="display: inline-block !important; vertical-align: middle !important; margin-right: 4px; line-height: 1 !important; font-size:11px !important;">📍</span><span style="display: inline-block !important; vertical-align: middle !important; font-size:11px !important; font-weight:500 !important;">${p.location}</span>
               </span>
             </div>
+            
             <div style="font-size:11px; color:var(--text-muted); display: block; line-height: 1.4;">👤 企劃: ${p.planner} ｜ 🎨 設計: ${p.designer} ｜ 狀態: ${p.stage}</div>
           </div>
 
@@ -896,7 +939,7 @@ class TtadApp {
             <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:700;">${metrics.accSales} <span style="font-size:12px; font-weight:400; color:var(--text-muted);">/ ${metrics.totalUnits}戶</span></div></div>
           </div>
 
-          <!-- 填報按鈕 -->
+          <!-- 填報按鈕 (強制物理高度對齊，確保文字垂直絕不偏下) -->
           <div style="display:flex; align-items:center; justify-content:flex-end;">
             <button class="btn btn-primary" onclick="app.openDataModal('${p.id}')">填報數據</button>
           </div>
@@ -1235,7 +1278,7 @@ class TtadApp {
         <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
         <textarea id="ai-summary-text" style="width:100%; height:110px; border:1px solid var(--apple-border); background:#FAF9F6; border-radius:6px; padding:8px; font-size:11px; font-family:monospace; resize:none;">${summaryText}</textarea>
         <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-          <button class="btn btn-primary btn-sm" onclick="app.copyAiSummary()" style="padding:4px 12px; font-size:11px;">📋 複製週報摘要</button>
+          <button class="btn btn-primary btn-sm" onclick="app.copyAiSummary()" style="padding:0 12px; height: 28px; line-height: 28px; font-size:11px;">📋 複製週報摘要</button>
         </div>
       `;
     }
@@ -1299,12 +1342,12 @@ class TtadApp {
         <div class="staff-list-item">
           <div>
             <span class="staff-list-name">${user.name}</span>
-            <span class="badge" style="background:rgba(0,0,0,0.05); font-size:10px; margin-left:6px; padding:2px 8px; border-radius:4px;">${user.dept}</span>
+            <span class="badge-dept" style="background:rgba(0,0,0,0.05); font-size:10px; margin-left:6px; padding:0 8px; border-radius:4px; height: 20px; line-height: 20px;">${user.dept}</span>
             <div class="staff-list-meta">Gmail: ${email} ｜ 入職: ${user.joinYear}/${user.joinMonth} (${tenureDisplay})</div>
           </div>
           <div>
             ${isLocked ? '<span style="font-size: 11px; color: var(--text-muted); font-weight:600;">🔒 系統主管</span>' : 
-            `<button class="btn btn-ghost btn-sm" style="color:var(--red); padding:4px 8px;" onclick="app.deletePersonnelConfirm('${email}')">離職刪除</button>`}
+            `<button class="btn btn-ghost btn-sm" style="color:var(--red); padding:0 8px;" onclick="app.deletePersonnelConfirm('${email}')">離職刪除</button>`}
           </div>
         </div>
       `;
@@ -1363,7 +1406,6 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── 智慧自適應螢幕截圖引擎 (Safari / Chrome 100% 穩定無損防爆跑版) ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
