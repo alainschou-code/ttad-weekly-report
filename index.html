@@ -99,32 +99,28 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   border-radius: var(--radius-lg); 
   padding: 28px; 
   margin-bottom: 20px; 
-  display: grid; 
-  grid-template-columns: 320px 1.1fr 1.2fr; 
-  gap: 36px; 
   box-shadow: var(--shadow-sm); 
   transition: transform 0.2s; 
   transform: translateZ(0); 
+  position: relative; /* 🌟 啟用絕對定位參考點，解耦按鈕排版 */
 }
 
-/* 🌟 強制彈性置中 + 行高設為 1，完全解決 html2canvas 多裝置基線下沉 */
+/* 🌟 DPI 相容性防跑版：捨棄 flex 垂直計算，改用 inline-block + 標準內距 */
 .badge-tag { 
   background: #E8E8ED !important; 
   color: var(--text-main) !important; 
   font-size: 11px !important; 
   font-weight: 600 !important; 
-  display: inline-flex !important; 
-  align-items: center !important; 
-  justify-content: center !important; 
-  vertical-align: middle !important; 
+  display: inline-block !important; 
+  vertical-align: middle !important;
   white-space: nowrap !important; 
   word-break: keep-all !important; 
-  height: 22px !important; 
-  line-height: 1 !important; 
-  padding: 0 10px !important;
+  padding: 3px 10px !important;
   border-radius: 6px !important;
   flex-shrink: 0 !important;
   box-sizing: border-box !important;
+  line-height: 1.2 !important;
+  margin-right: 8px !important;
 }
 
 .pj-company { 
@@ -150,7 +146,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .data-value { font-size: 22px; font-weight: 300; }
 
 /* 四格填報資訊展示塊 */
-.reports-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; grid-column: span 3; border-top: 1px solid var(--apple-border); padding-top: 20px; }
+.reports-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; border-top: 1px solid var(--apple-border); padding-top: 20px; }
 .report-box { background: #FAF9F6; border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--radius-md); }
 .report-box-title { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
 .report-box-content { font-size: 12px; color: var(--text-main); word-break: break-all; min-height: 36px; line-height: 1.6; }
@@ -168,7 +164,15 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .staff-list-name { font-weight: 600; }
 .staff-list-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-/* 🌟 將按鈕改為彈性容器與 line-height: 1，修復 html2canvas 裁切 */
+/* 🌟 動態截圖保護設定：在截圖模式下，全自動隱藏操作性按鈕，完美防偏斜跑版 */
+.screenshot-mode .btn-action-trigger {
+  display: none !important;
+}
+.screenshot-mode .top-meta-row {
+  padding-right: 0px !important; /* 🌟 隱藏按鈕後釋放空間，恢復完美中軸對稱 */
+}
+
+/* 🌟 一般按鈕樣式 */
 .btn { 
   display: inline-flex !important; 
   align-items: center !important;
@@ -918,37 +922,42 @@ class TtadApp {
       const metrics = this.getProjectInheritedData(p.id);
       const categoryColor = p.category === '透天' ? '#FF9500' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
+      // 🌟 【重大結構重組】：
+      // 1. 將「填報數據」按鈕移到 card 最外層，以 absolute 方式疊加於右上角。這能使卡片本身的主佈局 100% 解耦！
+      // 2. 主資訊排版改用 1.2fr:1fr 兩欄結構（metadata 與數據表）。
+      // 3. 截圖模式下，此絕對定位按鈕會被 100% 隱藏不繪製，完美消除 PC 電腦端 DPI 縮放下的按鈕文字偏斜/下移等相容性問題。
       return `
         <div class="project-card">
-          <!-- 左側建案元資訊 -->
-          <div style="display: block; text-align: left;">
-            <div class="pj-company">${p.company}</div>
-            <div class="pj-name">${p.name}</div>
+          <!-- 上半部資訊區 -->
+          <div class="top-meta-row" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 24px; padding-right: 120px; transition: padding 0.15s;">
             
-            <!-- 🌟 全面採用最安全的 inline-flex 搭配 line-height: 1 結構，完美消滅 emoji 與中文錯位 -->
-            <div style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 12px !important; height: 24px !important; line-height: 1 !important; white-space: nowrap !important;">
-              <span class="badge-tag" style="background:${categoryColor} !important; color:#FFFFFF !important;">${p.category}</span>
+            <!-- 左欄：建案元資訊 -->
+            <div style="display: block; text-align: left;">
+              <div class="pj-company" style="margin-bottom: 2px;">${p.company}</div>
+              <div class="pj-name" style="margin-bottom: 8px;">${p.name}</div>
               
-              <span style="font-size:11px; color:var(--text-muted); display: inline-flex !important; align-items: center !important; height: 22px !important; white-space: nowrap !important; box-sizing: border-box !important; gap: 4px !important;">
-                <span style="display: inline-flex !important; align-items: center !important; font-size:12px !important; line-height: 1 !important;">📍</span>
-                <span style="display: inline-flex !important; align-items: center !important; font-size:11px !important; font-weight:500 !important; line-height: 1 !important;">${p.location}</span>
-              </span>
+              <!-- DPI 安全扁平化標籤 -->
+              <div style="margin-bottom: 12px; height: 24px; display: block; white-space: nowrap;">
+                <span class="badge-tag" style="background:${categoryColor} !important; color:#FFFFFF !important;">${p.category}</span>
+                <span style="font-size:11px; color:var(--text-muted); display: inline-block; vertical-align: middle;">
+                  📍 ${p.location}
+                </span>
+              </div>
+              
+              <div style="font-size:11px; color:var(--text-muted); display: block; line-height: 1.4;">👤 企劃: ${p.planner} ｜ 🎨 設計: ${p.designer} ｜ 狀態: ${p.stage}</div>
             </div>
-            
-            <div style="font-size:11px; color:var(--text-muted); display: block; line-height: 1.4;">👤 企劃: ${p.planner} ｜ 🎨 設計: ${p.designer} ｜ 狀態: ${p.stage}</div>
+
+            <!-- 右欄：核心數據展示 -->
+            <div class="pj-data-grid">
+              <div><div class="data-label">週間來客</div><div class="data-value">${metrics.visits}<small style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</small></div></div>
+              <div><div class="data-label" style="color:var(--green);">當週成交</div><div class="data-value" style="color:var(--green); font-weight:600;">${metrics.deals}<small style="font-size:11px; margin-left:2px;">組</small></div></div>
+              <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:700;">${metrics.accSales} <span style="font-size:12px; font-weight:400; color:var(--text-muted);">/ ${metrics.totalUnits}戶</span></div></div>
+            </div>
+
           </div>
 
-          <!-- 右側核心數據展示 -->
-          <div class="pj-data-grid">
-            <div><div class="data-label">週間來客</div><div class="data-value">${metrics.visits}<small style="font-size:11px; color:var(--text-muted); margin-left:2px;">組</small></div></div>
-            <div><div class="data-label" style="color:var(--green);">當週成交</div><div class="data-value" style="color:var(--green); font-weight:600;">${metrics.deals}<small style="font-size:11px; margin-left:2px;">組</small></div></div>
-            <div><div class="data-label">累售 / 總戶</div><div class="data-value" style="font-size: 16px; font-weight:700;">${metrics.accSales} <span style="font-size:12px; font-weight:400; color:var(--text-muted);">/ ${metrics.totalUnits}戶</span></div></div>
-          </div>
-
-          <!-- 填報按鈕 (強制物理高度對齊，確保文字垂直絕不偏下) -->
-          <div style="display:flex; align-items:center; justify-content:flex-end;">
-            <button class="btn btn-primary" onclick="app.openDataModal('${p.id}')">填報數據</button>
-          </div>
+          <!-- 🌟 絕對定位填報按鈕：在網頁上完美浮動，在截圖時（screenshot-mode）將會徹底隱藏 -->
+          <button class="btn btn-primary btn-action-trigger" style="position: absolute; top: 28px; right: 28px; z-index: 10;" onclick="app.openDataModal('${p.id}')">填報數據</button>
 
           <!-- 下方四格填報資訊 -->
           <div class="reports-summary-grid">
@@ -1412,7 +1421,7 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── 智慧自適應螢幕截圖引擎 (Safari / Chrome 100% 穩定無損防爆跑版) ──
+  // ── 智慧自適應螢幕截圖引擎 ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
@@ -1427,7 +1436,12 @@ class TtadApp {
 
         this.showToast('📸 正在啟用自適應高解析度渲染，請稍候...');
 
-        // 1. 動態建立帶有完整個人與日期資訊的報告頭部卡片
+        // 🌟 【智慧截圖防跑安全防護】：啟用 screenshot-mode 樣式
+        // 這會強制在 Canvas 繪製期間，將所有「填報數據」按鈕暫時隱藏，並重置卡片右側 Padding。
+        // 這能 100% 徹底根除 PC 電腦端 DPI 縮放下的按鈕字體下偏、排版擠壓重疊問題！
+        element.classList.add('screenshot-mode');
+
+        // 動態建立帶有完整個人與日期資訊的報告頭部卡片
         const headerDiv = document.createElement('div');
         headerDiv.id = 'dynamic-screenshot-header';
         headerDiv.style.cssText = `
@@ -1468,10 +1482,10 @@ class TtadApp {
 
         this.showToast('📸 正在處理 Canvas 導出（2/2），即將下載...');
 
-        // 補上延遲阻斷，確保 Safari 完成滾動定位
+        // 補上延遲阻斷，確保瀏覽器完成頂部對齊排版與隱藏按鈕重置
         setTimeout(() => {
           try {
-            // 智慧自適應比例計算以避免 iOS Safari 3.2MB 記憶體限制
+            // 智慧自適應比例計算以避免 iOS / Safari 3.2MB 畫布記憶體限制，並優化 PC 端導出
             const rect = element.getBoundingClientRect();
             const width = rect.width || 1200;
             const height = rect.height || 1000;
@@ -1482,7 +1496,7 @@ class TtadApp {
             if (totalPixels * (calculatedScale * calculatedScale) > maxSafePixels) {
               calculatedScale = Math.sqrt(maxSafePixels / totalPixels);
               calculatedScale = Math.max(0.9, Math.min(calculatedScale, 1.8));
-              console.log(`[TTAD Debug] 觸發 Safari 記憶體保護。自適應降為比例: ${calculatedScale.toFixed(2)}`);
+              console.log(`[TTAD Debug] 觸發 Safari / PC 記憶體保護。自適應降為比例: ${calculatedScale.toFixed(2)}`);
             }
 
             html2canvas(element, {
@@ -1494,6 +1508,9 @@ class TtadApp {
             }).then(canvas => {
               window.scrollTo(0, origScrollTop); 
               headerDiv.remove();
+              
+              // 🌟 截圖完成，立即解除 Screenshot-Safe Mode，顯示填報數據按鈕
+              element.classList.remove('screenshot-mode');
 
               if (!canvas || canvas.width === 0 || canvas.height === 0) {
                 throw new Error("繪製畫布為空，可能是設備記憶體不足");
@@ -1517,12 +1534,14 @@ class TtadApp {
             }).catch(err => {
               window.scrollTo(0, origScrollTop);
               headerDiv.remove();
+              element.classList.remove('screenshot-mode');
               console.error('html2canvas 內部失敗:', err);
               showAlert('截圖失敗: ' + err.message + ' (建議切換為 Chrome 或重新整理頁面)');
             });
           } catch (e) {
             window.scrollTo(0, origScrollTop);
             headerDiv.remove();
+            element.classList.remove('screenshot-mode');
             console.error('螢幕截圖意外終止:', e);
             showAlert('螢幕截圖崩潰: ' + e.message);
           }
