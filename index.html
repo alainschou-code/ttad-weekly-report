@@ -55,18 +55,20 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
 .user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
 
+/* 🌟 強制彈性居中 + 行高設為 1，徹底防範 html2canvas 繪製歪斜 */
 .badge-dept { 
   background: var(--text-main) !important; 
   color: #FFFFFF !important; 
   font-size: 11px !important; 
   font-weight: 600 !important; 
-  display: inline-block !important; 
-  text-align: center !important;
+  display: inline-flex !important; 
+  align-items: center !important;
+  justify-content: center !important;
   vertical-align: middle !important;
   white-space: nowrap !important; 
   word-break: keep-all !important; 
   height: 22px !important; 
-  line-height: 22px !important; 
+  line-height: 1 !important; 
   padding: 0 10px !important;
   border-radius: 99px !important;
   flex-shrink: 0 !important;
@@ -105,19 +107,20 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   transform: translateZ(0); 
 }
 
-/* 經典 html2canvas 跑版修補：極致物理等高居中對齊樣式 */
+/* 🌟 強制彈性置中 + 行高設為 1，完全解決 html2canvas 多裝置基線下沉 */
 .badge-tag { 
   background: #E8E8ED !important; 
   color: var(--text-main) !important; 
   font-size: 11px !important; 
   font-weight: 600 !important; 
-  display: inline-block !important; 
-  text-align: center !important; 
+  display: inline-flex !important; 
+  align-items: center !important; 
+  justify-content: center !important; 
   vertical-align: middle !important; 
   white-space: nowrap !important; 
   word-break: keep-all !important; 
   height: 22px !important; 
-  line-height: 22px !important; 
+  line-height: 1 !important; 
   padding: 0 10px !important;
   border-radius: 6px !important;
   flex-shrink: 0 !important;
@@ -165,9 +168,11 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .staff-list-name { font-weight: 600; }
 .staff-list-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
+/* 🌟 將按鈕改為彈性容器與 line-height: 1，修復 html2canvas 裁切 */
 .btn { 
-  display: inline-block !important; 
-  text-align: center !important; 
+  display: inline-flex !important; 
+  align-items: center !important;
+  justify-content: center !important; 
   vertical-align: middle !important; 
   white-space: nowrap !important; 
   word-break: keep-all !important;
@@ -176,7 +181,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   transition: all 0.15s !important; 
   font-weight: 600 !important; 
   height: 36px !important;
-  line-height: 36px !important;
+  line-height: 1 !important; 
   padding: 0 18px !important;
   border-radius: 8px !important;
   flex-shrink: 0 !important;
@@ -185,13 +190,13 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .btn-primary { background: var(--apple-blue) !important; color: white !important; }
 .btn-primary:hover { background: var(--apple-blue-hover) !important; }
 .btn-secondary { background: #E8E8ED !important; color: var(--text-main) !important; }
-.btn-ghost { background: transparent !important; color: var(--text-muted) !important; line-height: 36px !important; }
+.btn-ghost { background: transparent !important; color: var(--text-muted) !important; }
 .btn-ghost:hover { background: rgba(0,0,0,0.04) !important; color: var(--text-main) !important; }
 .btn-capsule { border-radius: 99px !important; background: #E8E8ED !important; color: var(--text-main) !important; }
 
 .btn-sm {
   height: 28px !important;
-  line-height: 28px !important;
+  line-height: 1 !important; 
   padding: 0 12px !important;
   font-size: 11px !important;
 }
@@ -233,7 +238,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
       </select></div>
     </div>
 
-    <button class="btn btn-primary" style="width: 100%; height: 46px; line-height: 46px; padding: 0; border-radius: 12px;" onclick="handlePasscodeLogin()">驗證並進入系統</button>
+    <button class="btn btn-primary" style="width: 100%; height: 46px; line-height: 1 !important; padding: 0; border-radius: 12px;" onclick="handlePasscodeLogin()">驗證並進入系統</button>
   </div>
 </div>
 
@@ -338,7 +343,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
           <!-- 對話輸入欄位 -->
           <div style="display: flex; gap: 8px;">
             <input type="text" id="ai-chat-input" style="flex: 1; border: 1px solid var(--apple-border); padding: 10px 14px; border-radius: 10px; font-size: 12px; outline: none;" placeholder="問我任何事... 例如：永大Light這週狀況如何？" onkeydown="if(event.key==='Enter') app.sendAiInput()">
-            <button class="btn btn-primary" onclick="app.sendAiInput()" style="border-radius: 10px; height: 38px; line-height: 38px;">發送</button>
+            <button class="btn btn-primary" onclick="app.sendAiInput()" style="border-radius: 10px; height: 38px;">發送</button>
           </div>
         </div>
       </div>
@@ -389,7 +394,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
             <option value="9">9 月入職</option><option value="10">10 月入職</option><option value="11">11 月入職</option><option value="12">12 月入職</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="app.addPersonnel()" style="height:35px; line-height: 35px; padding: 0 16px;">新增同仁</button>
+        <button class="btn btn-primary" onclick="app.addPersonnel()" style="height:35px; padding: 0 16px;">新增同仁</button>
       </div>
       <hr style="border:0; border-top: 1px solid var(--apple-border); margin:16px 0;">
       <!-- 同仁列表 -->
@@ -585,7 +590,7 @@ function showAlert(message) {
     <div style="background:white; border-radius:14px; padding:24px; max-width:320px; width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.08);">
       <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">系統提示</div>
       <div style="font-size:13px; color:var(--text-main); margin-bottom:20px; line-height:1.5;">${message}</div>
-      <button id="alert-ok" class="btn btn-primary" style="width:100%; border-radius:8px; height:36px; line-height: 36px; padding:0;">確定</button>
+      <button id="alert-ok" class="btn btn-primary" style="width:100%; border-radius:8px; height:36px; line-height: 1 !important; padding:0;">確定</button>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -602,8 +607,8 @@ function showConfirm(message, onConfirm) {
       <div style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text-main);">確認操作</div>
       <div style="font-size:13px; color:var(--text-main); margin-bottom:20px; line-height:1.5;">${message}</div>
       <div style="display:flex; gap:8px;">
-        <button id="confirm-cancel" class="btn btn-secondary" style="flex:1; border-radius:8px; height: 36px; line-height: 36px; padding:0;">取消</button>
-        <button id="confirm-ok" class="btn btn-primary" style="flex:1; border-radius:8px; background:var(--red); height: 36px; line-height: 36px; padding:0;">確定</button>
+        <button id="confirm-cancel" class="btn btn-secondary" style="flex:1; border-radius:8px; height: 36px; line-height: 1 !important; padding:0;">取消</button>
+        <button id="confirm-ok" class="btn btn-primary" style="flex:1; border-radius:8px; background:var(--red); height: 36px; line-height: 1 !important; padding:0;">確定</button>
       </div>
     </div>
   `;
@@ -920,12 +925,13 @@ class TtadApp {
             <div class="pj-company">${p.company}</div>
             <div class="pj-name">${p.name}</div>
             
-            <!-- 採用絕對物理居中排版：高寬強制鎖定，完全擺脫彈性盒子(Flex)與表情符號產生的 html2canvas 錯位 -->
-            <div style="display: block !important; margin-bottom: 12px; height: 24px; line-height: 24px; white-space: nowrap !important;">
-              <span class="badge-tag" style="background:${categoryColor} !important; color:#FFFFFF !important; margin-right: 8px;">${p.category}</span>
+            <!-- 🌟 全面採用最安全的 inline-flex 搭配 line-height: 1 結構，完美消滅 emoji 與中文錯位 -->
+            <div style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 12px !important; height: 24px !important; line-height: 1 !important; white-space: nowrap !important;">
+              <span class="badge-tag" style="background:${categoryColor} !important; color:#FFFFFF !important;">${p.category}</span>
               
-              <span style="font-size:11px; color:var(--text-muted); display: inline-block !important; vertical-align: middle !important; height: 22px !important; line-height: 22px !important; white-space: nowrap !important; box-sizing: border-box !important;">
-                <span style="display: inline-block !important; vertical-align: middle !important; margin-right: 4px; line-height: 1 !important; font-size:11px !important;">📍</span><span style="display: inline-block !important; vertical-align: middle !important; font-size:11px !important; font-weight:500 !important;">${p.location}</span>
+              <span style="font-size:11px; color:var(--text-muted); display: inline-flex !important; align-items: center !important; height: 22px !important; white-space: nowrap !important; box-sizing: border-box !important; gap: 4px !important;">
+                <span style="display: inline-flex !important; align-items: center !important; font-size:12px !important; line-height: 1 !important;">📍</span>
+                <span style="display: inline-flex !important; align-items: center !important; font-size:11px !important; font-weight:500 !important; line-height: 1 !important;">${p.location}</span>
               </span>
             </div>
             
@@ -1278,7 +1284,7 @@ class TtadApp {
         <hr style="border:0; border-top:1px solid var(--apple-border); margin:8px 0;">
         <textarea id="ai-summary-text" style="width:100%; height:110px; border:1px solid var(--apple-border); background:#FAF9F6; border-radius:6px; padding:8px; font-size:11px; font-family:monospace; resize:none;">${summaryText}</textarea>
         <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-          <button class="btn btn-primary btn-sm" onclick="app.copyAiSummary()" style="padding:0 12px; height: 28px; line-height: 28px; font-size:11px;">📋 複製週報摘要</button>
+          <button class="btn btn-primary btn-sm" onclick="app.copyAiSummary()" style="padding:0 12px; height: 28px; font-size:11px;">📋 複製週報摘要</button>
         </div>
       `;
     }
@@ -1342,7 +1348,7 @@ class TtadApp {
         <div class="staff-list-item">
           <div>
             <span class="staff-list-name">${user.name}</span>
-            <span class="badge-dept" style="background:rgba(0,0,0,0.05); font-size:10px; margin-left:6px; padding:0 8px; border-radius:4px; height: 20px; line-height: 20px;">${user.dept}</span>
+            <span class="badge-dept" style="background:rgba(0,0,0,0.05) !important; color: var(--text-main) !important; font-size:10px !important; margin-left:6px; padding:0 8px; border-radius:4px; height: 20px !important;">${user.dept}</span>
             <div class="staff-list-meta">Gmail: ${email} ｜ 入職: ${user.joinYear}/${user.joinMonth} (${tenureDisplay})</div>
           </div>
           <div>
@@ -1406,6 +1412,7 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
+  // ── 智慧自適應螢幕截圖引擎 (Safari / Chrome 100% 穩定無損防爆跑版) ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
