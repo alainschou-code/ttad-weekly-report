@@ -50,11 +50,12 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .apple-input-box input, .apple-input-box select { width: 100%; border: none; background: transparent; padding: 12px 16px; font-size: 13px; outline: none; font-family: var(--font); color: var(--text-main); }
 .apple-input-box select { -webkit-appearance: none; cursor: pointer; }
 
+/* ── 頂部導覽列 ── */
 .topbar { background: rgba(255, 255, 255, 0.85); backdrop-filter: saturate(180%) blur(20px); height: 64px; border-bottom: 1px solid var(--apple-border); position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
 .brand-title { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
 
 .user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
-.badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-dept { background: var(--text-main); color: #FFFFFF; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap !important; word-break: keep-all !important; display: inline-block !important; }
 
 /* ── 內容區 ── */
 .app-container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
@@ -69,17 +70,61 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
 /* 人員膠囊篩選器 */
 .pill-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.pill-btn { border: 1px solid var(--apple-border); background: #F5F5F7; color: var(--text-main); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.pill-btn { border: 1px solid var(--apple-border); background: #F5F5F7; color: var(--text-main); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap !important; word-break: keep-all !important; display: inline-block !important; }
 .pill-btn:hover { background: #E8E8ED; }
 .pill-btn.active { background: var(--text-main); color: #FFFFFF; border-color: var(--text-main); }
 
-.project-card { background: var(--apple-surface); border: 1px solid var(--apple-border); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; display: grid; grid-template-columns: 320px 1.1fr 1.2fr; gap: 36px; box-shadow: var(--shadow-sm); transition: transform 0.2s; }
-.pj-company { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
-.pj-name { font-size: 20px; font-weight: 700; color: var(--text-main); }
+/* ── 建案列表卡片 ── */
+.project-card { 
+  background: var(--apple-surface); 
+  border: 1px solid var(--apple-border); 
+  border-radius: var(--radius-lg); 
+  padding: 28px; 
+  margin-bottom: 20px; 
+  display: grid; 
+  grid-template-columns: 320px 1.1fr 1.2fr; 
+  gap: 36px; 
+  box-shadow: var(--shadow-sm); 
+  transition: transform 0.2s; 
+  transform: translateZ(0); /* 啟用硬體加速渲染內容 */
+}
+
+/* 經典 html2canvas 跑版修補程序：禁止徽章與案名被截圖引擎壓縮 */
+.badge-tag { 
+  background: #E8E8ED; 
+  color: var(--text-main); 
+  font-size: 11px; 
+  padding: 3px 8px; 
+  border-radius: 6px; 
+  font-weight: 600; 
+  margin-right: 6px; 
+  display: inline-block !important; 
+  white-space: nowrap !important; 
+  word-break: keep-all !important; 
+  vertical-align: middle;
+}
+
+.pj-company { 
+  font-size: 11px; 
+  color: var(--text-muted); 
+  text-transform: uppercase; 
+  display: block !important;
+  line-height: 1.2 !important;
+  margin-bottom: 4px;
+}
+
+.pj-name { 
+  font-size: 20px; 
+  font-weight: 700; 
+  color: var(--text-main); 
+  display: block !important;
+  line-height: 1.3 !important;
+  margin-bottom: 8px !important;
+}
+
 .pj-data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background: #F5F5F7; padding: 20px; border-radius: var(--radius-lg); align-items: center; }
 .data-label { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
 .data-value { font-size: 22px; font-weight: 300; }
-.badge-tag { background: #E8E8ED; color: var(--text-main); font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; margin-right: 6px; }
 
 /* 四格填報資訊展示塊 */
 .reports-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; grid-column: span 3; border-top: 1px solid var(--apple-border); padding-top: 20px; }
@@ -197,6 +242,7 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
           前往前台視角
         </button>
       </div>
+      
       <div class="card-body" style="padding: 32px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 36px; min-height: 420px; background: #FFFFFF;">
         <!-- 左側：同仁膠囊篩選器 -->
         <div style="display: flex; flex-direction: column; gap: 24px; justify-content: space-between;">
@@ -439,7 +485,7 @@ function loadWeeklyRecords() {
   if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
 }
 
-// 升級過的姓名與識別碼安全過濾器：全面剔除空格與所有種類之引號 `'"` 以及反單引號
+// 升級姓名過濾器：全面剔除空格與所有種類之引號 `'"` 以及反單引號
 const sanitizeName = (str) => str ? String(str).replace(/[\s'"`]/g, '') : '';
 
 // 智慧日期區間解析 (產出 W26 (06/22 ~ 06/28) 格式)
@@ -824,18 +870,18 @@ class TtadApp {
       const metrics = this.getProjectInheritedData(p.id);
       const categoryColor = p.category === '透天' ? 'orange' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
-      // 關鍵點：onclick 僅傳遞經過 sanitize 的穩定 id 變數，完全不傳遞中文、英文字元，避免 L'ART 等單引號造成語法閃退
+      // 採用 100% 穩固的 Block / inline-block 與 nowrap，避免在 html2canvas 中縮放跑版與字體重疊
       return `
         <div class="project-card">
           <!-- 左側建案元資訊 -->
-          <div>
+          <div style="display: block; text-align: left;">
             <div class="pj-company">${p.company}</div>
             <div class="pj-name">${p.name}</div>
-            <div style="margin-bottom: 12px;">
-              <span class="badge-tag" style="background:${categoryColor}; color:white;">${p.category}</span>
-              <span style="font-size:11px; color:var(--text-muted)">📍 ${p.location}</span>
+            <div style="display: block; margin-bottom: 12px; line-height: 1.5;">
+              <span class="badge-tag" style="background:${categoryColor}; color:white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block !important; white-space: nowrap !important; word-break: keep-all !important; vertical-align: middle;">${p.category}</span>
+              <span style="font-size:11px; color:var(--text-muted); display: inline-block !important; white-space: nowrap !important; vertical-align: middle; margin-left: 6px;">📍 ${p.location}</span>
             </div>
-            <div style="font-size:11px; color:var(--text-muted)">👤 企劃: ${p.planner} ｜ 🎨 設計: ${p.designer} ｜ 狀態: ${p.stage}</div>
+            <div style="font-size:11px; color:var(--text-muted); display: block; line-height: 1.4;">👤 企劃: ${p.planner} ｜ 🎨 設計: ${p.designer} ｜ 狀態: ${p.stage}</div>
           </div>
 
           <!-- 右側核心數據展示 -->
@@ -1314,7 +1360,7 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── 智慧自適應螢幕截圖引擎 (Safari / Chrome 100% 穩定無損防爆) ──
+  // ── 智慧自適應螢幕截圖引擎 (Safari / Chrome 100% 穩定無損防爆跑版) ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
