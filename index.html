@@ -30,6 +30,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--apple-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.5; }
 
+/* ── 登入介面 ── */
 #login-screen { position: fixed; inset: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .apple-login-container { width: 100%; max-width: 360px; text-align: center; padding: 32px 24px; }
 .brand-headline { font-size: 28px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-main); margin-bottom: 8px; }
@@ -106,17 +107,18 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 }
 
 /* 🌟 DPI 相容性防跑版：捨棄 flex 垂直計算，改用 inline-block + 標準內距 */
+/* 🌟 本次修復亮點：徹底取消標籤底色，僅保留文字高亮綠色，完美齊左對齊 */
 .badge-tag { 
-  background: #E8E8ED !important; 
-  color: var(--text-main) !important; 
+  background: transparent !important; 
+  color: var(--green) !important; 
   font-size: 11px !important; 
-  font-weight: 600 !important; 
+  font-weight: 700 !important; 
   display: inline-block !important; 
   vertical-align: middle !important;
   white-space: nowrap !important; 
   word-break: keep-all !important; 
-  padding: 3px 10px !important;
-  border-radius: 6px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
   flex-shrink: 0 !important;
   box-sizing: border-box !important;
   line-height: 1.2 !important;
@@ -920,12 +922,8 @@ class TtadApp {
 
     container.innerHTML = filtered.map(p => {
       const metrics = this.getProjectInheritedData(p.id);
-      const categoryColor = p.category === '透天' ? '#FF9500' : (p.category === '大樓' ? 'var(--apple-blue)' : 'var(--green)');
       
-      // 🌟 【重大結構重組】：
-      // 1. 將「填報數據」按鈕移到 card 最外層，以 absolute 方式疊加於右上角。這能使卡片本身的主佈局 100% 解耦！
-      // 2. 主資訊排版改用 1.2fr:1fr 兩欄結構（metadata 與數據表）。
-      // 3. 截圖模式下，此絕對定位按鈕會被 100% 隱藏不繪製，完美消除 PC 電腦端 DPI 縮放下的按鈕文字偏斜/下移等相容性問題。
+      // 🌟 本次重構：完全拿掉原本的 categoryColor pill 背景，改為純綠色高亮文字 (.badge-tag)，完美齊左對齊案名
       return `
         <div class="project-card">
           <!-- 上半部資訊區 -->
@@ -936,9 +934,9 @@ class TtadApp {
               <div class="pj-company" style="margin-bottom: 2px;">${p.company}</div>
               <div class="pj-name" style="margin-bottom: 8px;">${p.name}</div>
               
-              <!-- DPI 安全扁平化標籤 -->
+              <!-- 🌟 取消標籤底色，僅保留文字高亮綠色，並齊左對齊 -->
               <div style="margin-bottom: 12px; height: 24px; display: block; white-space: nowrap;">
-                <span class="badge-tag" style="background:${categoryColor} !important; color:#FFFFFF !important;">${p.category}</span>
+                <span class="badge-tag">${p.category}</span>
                 <span style="font-size:11px; color:var(--text-muted); display: inline-block; vertical-align: middle;">
                   📍 ${p.location}
                 </span>
@@ -1421,7 +1419,7 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── 智慧自適應螢幕截圖引擎 ──
+  // ── 智慧自適應螢幕截圖引擎 (PC 與 Mac 雙版本通用無損安全保護) ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
