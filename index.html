@@ -56,7 +56,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 
 .user-meta-card { display: flex; align-items: center; gap: 8px; font-size: 12px; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 99px; border: 1px solid var(--apple-border); }
 
-/* 🌟 強制彈性居中 + 行高設為 1，徹底防範 html2canvas 繪製歪斜 */
 .badge-dept { 
   background: var(--text-main) !important; 
   color: #FFFFFF !important; 
@@ -103,11 +102,9 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
   box-shadow: var(--shadow-sm); 
   transition: transform 0.2s; 
   transform: translateZ(0); 
-  position: relative; /* 🌟 啟用絕對定位參考點，解耦按鈕排版 */
+  position: relative;
 }
 
-/* 🌟 DPI 相容性防跑版：捨棄 flex 垂直計算，改用 inline-block + 標準內距 */
-/* 🌟 本次修復亮點：徹底取消標籤底色，僅保留文字高亮綠色，完美齊左對齊 */
 .badge-tag { 
   background: transparent !important; 
   color: var(--green) !important; 
@@ -147,7 +144,6 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .data-label { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
 .data-value { font-size: 22px; font-weight: 300; }
 
-/* 四格填報資訊展示塊 */
 .reports-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; border-top: 1px solid var(--apple-border); padding-top: 20px; }
 .report-box { background: #FAF9F6; border: 1px solid var(--apple-border); padding: 14px; border-radius: var(--radius-md); }
 .report-box-title { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
@@ -166,15 +162,14 @@ body { font-family: var(--font); background: var(--apple-bg); color: var(--text-
 .staff-list-name { font-weight: 600; }
 .staff-list-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-/* 🌟 動態截圖保護設定：在截圖模式下，全自動隱藏操作性按鈕，完美防偏斜跑版 */
+/* 動態截圖保護設定：隱藏操作按鈕 */
 .screenshot-mode .btn-action-trigger {
   display: none !important;
 }
 .screenshot-mode .top-meta-row {
-  padding-right: 0px !important; /* 🌟 隱藏按鈕後釋放空間，恢復完美中軸對稱 */
+  padding-right: 0px !important;
 }
 
-/* 🌟 一般按鈕樣式 */
 .btn { 
   display: inline-flex !important; 
   align-items: center !important;
@@ -526,6 +521,7 @@ let STAFF_DATABASE = {
 };
 
 let WEEKLY_RECORDS_DB = {};
+let CLOSED_PROJECTS_DB = {};
 let CLOUD_API_URL = 'https://script.google.com/macros/s/AKfycbzU_g8oE4UQrOK7sz8aeCEibpxf1NLfboDG4CVq61bxcu301q1dYrYH_Pae2S41UIiwcA/exec';
 
 function saveStaffDatabase() { localStorage.setItem('ttad_staff_db_v4', JSON.stringify(STAFF_DATABASE)); }
@@ -538,6 +534,12 @@ function saveWeeklyRecords() { localStorage.setItem('ttad_weekly_records_db_v4',
 function loadWeeklyRecords() {
   const saved = localStorage.getItem('ttad_weekly_records_db_v4');
   if (saved) WEEKLY_RECORDS_DB = JSON.parse(saved);
+}
+
+function saveClosedProjects() { localStorage.setItem('ttad_closed_projects_db_v1', JSON.stringify(CLOSED_PROJECTS_DB)); }
+function loadClosedProjects() {
+  const saved = localStorage.getItem('ttad_closed_projects_db_v1');
+  if (saved) CLOSED_PROJECTS_DB = JSON.parse(saved);
 }
 
 const sanitizeName = (str) => str ? String(str).replace(/[\s'"`]/g, '') : '';
@@ -715,7 +717,6 @@ class TtadApp {
           prjName = fullName.split('．')[1].trim();
         }
 
-        // 採用複合永久唯一金鑰，避免排序錯位。剔除引號，避免 onclick 崩潰
         const stableId = sanitizeName(fullName) + '_' + sanitizeName(getCell(1));
 
         return {
@@ -826,41 +827,44 @@ class TtadApp {
     this.renderProjectList();
   }
 
+  // 🌟 STREAMING_CHUNK: Inheriting data backwards across all historical weeks...
   getProjectInheritedData(projectId) {
     const currentWeek = getWeekString(this.currentWeekOffset);
     const currentRecord = (WEEKLY_RECORDS_DB[currentWeek] && WEEKLY_RECORDS_DB[currentWeek][projectId]) || {};
 
-    let feedback = currentRecord.feedback || '';
-    let currentMedia = currentRecord.currentMedia || '';
-    let futureMedia = currentRecord.futureMedia || '';
-    let totalUnits = currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== 0 ? currentRecord.totalUnits : 0;
-    let accSales = currentRecord.accSales !== undefined && currentRecord.accSales !== 0 ? currentRecord.accSales : 0;
-    let totalSales = currentRecord.totalSales || '';
+    let visits = currentRecord.visits !== undefined ? currentRecord.visits : 0;
+    let deals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
+    let accSales = (currentRecord.accSales !== undefined && currentRecord.accSales !== null) ? currentRecord.accSales : null;
+    let totalUnits = (currentRecord.totalUnits !== undefined && currentRecord.totalUnits !== null) ? currentRecord.totalUnits : null;
+    let feedback = currentRecord.feedback !== undefined ? currentRecord.feedback : '';
+    let currentMedia = currentRecord.currentMedia !== undefined ? currentRecord.currentMedia : '';
+    let futureMedia = currentRecord.futureMedia !== undefined ? currentRecord.futureMedia : '';
+    let totalSales = currentRecord.totalSales !== undefined ? currentRecord.totalSales : '';
 
+    // 向上全自動穿透繼承歷史紀錄
     let checkWeek = getPrevWeekKey(currentWeek);
-    for (let i = 0; i < 12; i++) {
-      const historicalRec = WEEKLY_RECORDS_DB[checkWeek] ? WEEKLY_RECORDS_DB[checkWeek][projectId] : null;
-      if (historicalRec) {
-        if (!feedback && historicalRec.feedback) feedback = historicalRec.feedback;
-        if (!currentMedia && historicalRec.currentMedia) currentMedia = historicalRec.currentMedia;
-        if (!futureMedia && historicalRec.futureMedia) futureMedia = historicalRec.futureMedia;
-        if (totalUnits === 0 && historicalRec.totalUnits) totalUnits = historicalRec.totalUnits;
-        if (accSales === 0 && historicalRec.accSales) {
-          const currentDeals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
-          accSales = historicalRec.accSales + currentDeals;
+    for (let i = 0; i < 52; i++) {
+      const rec = WEEKLY_RECORDS_DB[checkWeek] ? WEEKLY_RECORDS_DB[checkWeek][projectId] : null;
+      if (rec) {
+        if (accSales === null && rec.accSales !== undefined && rec.accSales !== null) {
+          accSales = rec.accSales;
         }
-        if (!totalSales && historicalRec.totalSales) totalSales = historicalRec.totalSales;
+        if (totalUnits === null && rec.totalUnits !== undefined && rec.totalUnits !== null) {
+          totalUnits = rec.totalUnits;
+        }
+        if (!feedback && rec.feedback) feedback = rec.feedback;
+        if (!currentMedia && rec.currentMedia) currentMedia = rec.currentMedia;
+        if (!futureMedia && rec.futureMedia) futureMedia = rec.futureMedia;
+        if (!totalSales && rec.totalSales) totalSales = rec.totalSales;
       }
       checkWeek = getPrevWeekKey(checkWeek);
     }
 
+    if (accSales === null) accSales = deals;
+    if (totalUnits === null) totalUnits = 0;
     if (!feedback) feedback = '暫無反應。';
     if (!currentMedia) currentMedia = '暫無媒體。';
     if (!futureMedia) futureMedia = '暫無規劃。';
-    
-    const visits = currentRecord.visits !== undefined ? currentRecord.visits : 0;
-    const deals = currentRecord.deals !== undefined ? currentRecord.deals : 0;
-    if (accSales === 0) accSales = deals; 
 
     const progress = totalUnits > 0 ? ((accSales / totalUnits) * 100).toFixed(1) : '0.0';
 
@@ -881,37 +885,30 @@ class TtadApp {
     const container = document.getElementById('project-list-container');
     
     const filtered = this.projectDb.filter(p => {
-      const isClosed = p.stage.includes('結案') || p.stage.startsWith('8');
-      if (isClosed) return false;
+      // 1. 全自動隱藏「沒接到」個案
+      const isNoDeal = (p.stage + p.category + p.planner + p.designer + p.name + p.company).includes('沒接到');
+      if (isNoDeal) return false;
 
-      // 1. 管理部後台模式
+      // 判斷是否標記為結案
+      const isManualClosed = CLOSED_PROJECTS_DB[p.id] === true;
+      const isStageClosed = p.stage.includes('結案') || p.stage.startsWith('8');
+      const isClosed = isManualClosed || isStageClosed;
+
+      // 2. 管理部後台模式：保留全體個案（包含結案個案供日後調閱）
       if (this.currentDept === '管理部') {
-        let matchPlanner = true;
-        let matchDesigner = true;
-
-        if (this.selectedPlannerFilter !== '全部企劃') {
-          matchPlanner = (p.planner === this.selectedPlannerFilter);
-        }
-        if (this.selectedDesignerFilter !== '全部設計') {
-          matchDesigner = (p.designer === this.selectedDesignerFilter);
-        }
-
-        if (this.selectedPlannerFilter !== '全部企劃' && this.selectedDesignerFilter !== '全部設計') {
-          return matchPlanner && matchDesigner;
-        } else if (this.selectedPlannerFilter !== '全部企劃') {
-          return matchPlanner;
-        } else if (this.selectedDesignerFilter !== '全部設計') {
-          return matchDesigner;
-        }
-        return true; 
+        let matchPlanner = (this.selectedPlannerFilter === '全部企劃' || p.planner === this.selectedPlannerFilter);
+        let matchDesigner = (this.selectedDesignerFilter === '全部設計' || p.designer === this.selectedDesignerFilter);
+        return matchPlanner && matchDesigner;
       }
       
-      // 2. 主管前台唯讀模式：全能視野（顯示全體進行中專案）
+      // 3. 前台模式（包含主管切換至前台與一般同仁）：
+      // 結案個案在前台列表一律不顯示！
+      if (isClosed) return false;
+
       if (this.originalDept === '管理部' && this.currentDept !== '管理部') {
         return true;
       }
 
-      // 3. 一般同仁：僅顯示本人負責專案
       return p.planner === this.currentStaffName || p.designer === this.currentStaffName;
     });
 
@@ -922,19 +919,20 @@ class TtadApp {
 
     container.innerHTML = filtered.map(p => {
       const metrics = this.getProjectInheritedData(p.id);
+      const isClosed = CLOSED_PROJECTS_DB[p.id] === true || p.stage.includes('結案') || p.stage.startsWith('8');
       
-      // 🌟 本次重構：完全拿掉原本的 categoryColor pill 背景，改為純綠色高亮文字 (.badge-tag)，完美齊左對齊案名
       return `
-        <div class="project-card">
+        <div class="project-card" style="${isClosed ? 'opacity: 0.7; background: #FAFAFB;' : ''}">
           <!-- 上半部資訊區 -->
-          <div class="top-meta-row" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 24px; padding-right: 120px; transition: padding 0.15s;">
+          <div class="top-meta-row" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 24px; padding-right: 180px; transition: padding 0.15s;">
             
             <!-- 左欄：建案元資訊 -->
             <div style="display: block; text-align: left;">
-              <div class="pj-company" style="margin-bottom: 2px;">${p.company}</div>
+              <div class="pj-company" style="margin-bottom: 2px;">
+                ${p.company} ${isClosed ? '<span style="color:var(--red); font-weight:700; margin-left:6px;">🔒 已結案</span>' : ''}
+              </div>
               <div class="pj-name" style="margin-bottom: 8px;">${p.name}</div>
               
-              <!-- 🌟 取消標籤底色，僅保留文字高亮綠色，並齊左對齊 -->
               <div style="margin-bottom: 12px; height: 24px; display: block; white-space: nowrap;">
                 <span class="badge-tag">${p.category}</span>
                 <span style="font-size:11px; color:var(--text-muted); display: inline-block; vertical-align: middle;">
@@ -954,8 +952,13 @@ class TtadApp {
 
           </div>
 
-          <!-- 🌟 絕對定位填報按鈕：在網頁上完美浮動，在截圖時（screenshot-mode）將會徹底隱藏 -->
-          <button class="btn btn-primary btn-action-trigger" style="position: absolute; top: 28px; right: 28px; z-index: 10;" onclick="app.openDataModal('${p.id}')">填報數據</button>
+          <!-- 絕對定位操作按鈕組 (支援標記結案與填報數據) -->
+          <div class="btn-action-trigger" style="position: absolute; top: 28px; right: 28px; z-index: 10; display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="app.toggleCloseProject('${p.id}')">
+              ${isClosed ? '🔄 恢復個案' : '📁 標記結案'}
+            </button>
+            <button class="btn btn-primary" onclick="app.openDataModal('${p.id}')">填報數據</button>
+          </div>
 
           <!-- 下方四格填報資訊 -->
           <div class="reports-summary-grid">
@@ -983,6 +986,31 @@ class TtadApp {
     }).join('');
   }
 
+  // 切換結案狀態
+  toggleCloseProject(id) {
+    const project = this.projectDb.find(p => p.id === id);
+    const prjName = project ? project.name : '此個案';
+    const isCurrentlyClosed = CLOSED_PROJECTS_DB[id] === true;
+
+    if (isCurrentlyClosed) {
+      showConfirm(`確定要重新將【${prjName}】恢復為進行中個案嗎？`, () => {
+        CLOSED_PROJECTS_DB[id] = false;
+        saveClosedProjects();
+        this.pushDataToCloud();
+        this.renderProjectList();
+        this.showToast(`✅ 已將【${prjName}】恢復為進行中個案！`);
+      });
+    } else {
+      showConfirm(`確定要將【${prjName}】標記為結案嗎？\n\n（標記後在前台列表將不再顯示，但管理部後台仍會完整保留以利日後調閱資料）`, () => {
+        CLOSED_PROJECTS_DB[id] = true;
+        saveClosedProjects();
+        this.pushDataToCloud();
+        this.renderProjectList();
+        this.showToast(`📁 已將【${prjName}】標記結案！`);
+      });
+    }
+  }
+
   // ── 數據填報彈窗 ──
   openDataModal(id) {
     const project = this.projectDb.find(p => p.id === id);
@@ -997,15 +1025,14 @@ class TtadApp {
 
     document.getElementById('entry-visits').value = metrics.visits || '';
     document.getElementById('entry-deals').value = metrics.deals || '';
-    document.getElementById('entry-acc-sales').value = metrics.accSales || '';
+    document.getElementById('entry-acc-sales').value = metrics.accSales !== undefined ? metrics.accSales : '';
     document.getElementById('entry-feedback').value = metrics.feedback === '暫無反應。' ? '' : metrics.feedback;
     document.getElementById('entry-current-media').value = metrics.currentMedia === '暫無媒體。' ? '' : metrics.currentMedia;
     document.getElementById('entry-future-media').value = metrics.futureMedia === '暫無規劃。' ? '' : metrics.futureMedia;
     document.getElementById('entry-total-sales').value = metrics.totalSales || '';
 
-    // 解鎖總戶數供同仁自由編輯
     const totalUnitsInput = document.getElementById('entry-total-units');
-    totalUnitsInput.value = metrics.totalUnits || '';
+    totalUnitsInput.value = metrics.totalUnits !== undefined ? metrics.totalUnits : '';
     totalUnitsInput.readOnly = false;
     totalUnitsInput.style.background = '#FFFFFF';
     totalUnitsInput.style.color = '#1D1D1F';
@@ -1026,11 +1053,16 @@ class TtadApp {
 
     if (!WEEKLY_RECORDS_DB[currentWeek]) WEEKLY_RECORDS_DB[currentWeek] = {};
     
+    const parseNumInput = (val) => {
+      const v = String(val).trim();
+      return v === '' ? null : (parseInt(v, 10) || 0);
+    };
+
     WEEKLY_RECORDS_DB[currentWeek][id] = {
-      visits: parseInt(document.getElementById('entry-visits').value) || 0,
-      deals: parseInt(document.getElementById('entry-deals').value) || 0,
-      totalUnits: parseInt(document.getElementById('entry-total-units').value) || 0,
-      accSales: parseInt(document.getElementById('entry-acc-sales').value) || 0,
+      visits: parseInt(document.getElementById('entry-visits').value, 10) || 0,
+      deals: parseInt(document.getElementById('entry-deals').value, 10) || 0,
+      totalUnits: parseNumInput(document.getElementById('entry-total-units').value),
+      accSales: parseNumInput(document.getElementById('entry-acc-sales').value),
       feedback: document.getElementById('entry-feedback').value.trim(),
       currentMedia: document.getElementById('entry-current-media').value.trim(),
       futureMedia: document.getElementById('entry-future-media').value.trim(),
@@ -1117,7 +1149,8 @@ class TtadApp {
           week: weekKey,
           updatedAt: new Date().toISOString(),
           reporter: this.currentStaffName,
-          records: dataToSend
+          records: dataToSend,
+          closedProjects: CLOSED_PROJECTS_DB
         })
       });
       
@@ -1147,6 +1180,14 @@ class TtadApp {
           ...WEEKLY_RECORDS_DB[weekKey],
           ...result.data.records
         };
+
+        if (result.data.closedProjects) {
+          CLOSED_PROJECTS_DB = {
+            ...CLOSED_PROJECTS_DB,
+            ...result.data.closedProjects
+          };
+          saveClosedProjects();
+        }
         
         saveWeeklyRecords();
         this.renderProjectList();
@@ -1209,7 +1250,6 @@ class TtadApp {
     container.scrollTop = container.scrollHeight;
   }
 
-  // 實時全案數據計算與 AI 分析報告生成
   generateAiResponse(tag) {
     const weekKey = getWeekString(this.currentWeekOffset);
     
@@ -1419,7 +1459,7 @@ class TtadApp {
     setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── 智慧自適應螢幕截圖引擎 (PC 與 Mac 雙版本通用無損安全保護) ──
+  // ── 智慧自適應螢幕截圖引擎 ──
   setupGlobalEvents() {
     const btn = document.getElementById('btn-4k-screenshot');
     if (btn) {
@@ -1434,12 +1474,8 @@ class TtadApp {
 
         this.showToast('📸 正在啟用自適應高解析度渲染，請稍候...');
 
-        // 🌟 【智慧截圖防跑安全防護】：啟用 screenshot-mode 樣式
-        // 這會強制在 Canvas 繪製期間，將所有「填報數據」按鈕暫時隱藏，並重置卡片右側 Padding。
-        // 這能 100% 徹底根除 PC 電腦端 DPI 縮放下的按鈕字體下偏、排版擠壓重疊問題！
         element.classList.add('screenshot-mode');
 
-        // 動態建立帶有完整個人與日期資訊的報告頭部卡片
         const headerDiv = document.createElement('div');
         headerDiv.id = 'dynamic-screenshot-header';
         headerDiv.style.cssText = `
@@ -1472,7 +1508,6 @@ class TtadApp {
           </div>
         `;
 
-        // 插入到週報最頂部進行渲染
         element.insertBefore(headerDiv, element.firstChild);
 
         const origScrollTop = window.scrollY;
@@ -1480,10 +1515,8 @@ class TtadApp {
 
         this.showToast('📸 正在處理 Canvas 導出（2/2），即將下載...');
 
-        // 補上延遲阻斷，確保瀏覽器完成頂部對齊排版與隱藏按鈕重置
         setTimeout(() => {
           try {
-            // 智慧自適應比例計算以避免 iOS / Safari 3.2MB 畫布記憶體限制，並優化 PC 端導出
             const rect = element.getBoundingClientRect();
             const width = rect.width || 1200;
             const height = rect.height || 1000;
@@ -1506,8 +1539,6 @@ class TtadApp {
             }).then(canvas => {
               window.scrollTo(0, origScrollTop); 
               headerDiv.remove();
-              
-              // 🌟 截圖完成，立即解除 Screenshot-Safe Mode，顯示填報數據按鈕
               element.classList.remove('screenshot-mode');
 
               if (!canvas || canvas.width === 0 || canvas.height === 0) {
@@ -1555,6 +1586,7 @@ const app = new TtadApp();
 document.addEventListener('DOMContentLoaded', () => {
   loadStaffDatabase();
   loadWeeklyRecords();
+  loadClosedProjects();
   
   const yearEl = document.getElementById('apple-user-tenure-year');
   const modalYearEl = document.getElementById('m-staff-join-year');
